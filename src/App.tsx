@@ -774,6 +774,7 @@ function App() {
   const [reminderStaffInput, setReminderStaffInput] = useState('');
   const [communicationDraft, setCommunicationDraft] = useState<CommunicationDraft>(() => createInitialCommunicationDraft());
   const [importMessage, setImportMessage] = useState('');
+  const [showGuide, setShowGuide] = useState(false);
 
   const selectedApplicant = useMemo(
     () => applicants.find((applicant) => applicant.id === selectedApplicantId) ?? null,
@@ -831,6 +832,96 @@ function App() {
     () => applicants.filter((applicant) => applicant.hasFoodAllergy || applicant.hasReligiousDietaryRestriction),
     [applicants]
   );
+
+  const todayTaskItems = useMemo(() => {
+    if (!applicants.length) {
+      return [
+        {
+          title: '正本Excelを読み込む',
+          detail: '共有フォルダ上の最新版進捗Excelを最初に読み込んでください。',
+          tone: 'info'
+        }
+      ];
+    }
+
+    const tasks = [];
+
+    if (unsetDueDateCount > 0) {
+      tasks.push({
+        title: `提出期限未設定：${unsetDueDateCount}名`,
+        detail: '共通提出期限を入れ、「期限未設定者のみに適用」を使うと安全です。',
+        tone: 'warning'
+      });
+    }
+
+    if (pendingCount > 0) {
+      tasks.push({
+        title: `未提出書類あり：${pendingCount}名`,
+        detail: '氏名一覧または一覧表から学生を開き、必要に応じてリマインド文面をコピーしてください。',
+        tone: 'warning'
+      });
+    }
+
+    if (visaRequirementUncheckedCount > 0) {
+      tasks.push({
+        title: `ビザ要否未確認：${visaRequirementUncheckedCount}名`,
+        detail: '国籍を見て、ビザ支援書類が必要かどうかを職員側で確認してください。',
+        tone: 'danger'
+      });
+    }
+
+    if (visaDocumentsPendingCount > 0) {
+      tasks.push({
+        title: `ビザ支援書類未送付：${visaDocumentsPendingCount}名`,
+        detail: 'ビザ支援書類が必要な学生に送付し、個人ページで送付済みにしてください。',
+        tone: 'danger'
+      });
+    }
+
+    if (confirmationPendingCount > 0) {
+      tasks.push({
+        title: `確認事項未完了：${confirmationPendingCount}名`,
+        detail: '支払、保険、食事制限、到着情報の確認状況を確認してください。',
+        tone: 'info'
+      });
+    }
+
+    if (dietaryAttentionApplicants.length > 0) {
+      tasks.push({
+        title: `食事制限あり：${dietaryAttentionApplicants.length}名`,
+        detail: '食物アレルギー・宗教的食物制限の内容を確認し、関係者共有前に一覧で確認してください。',
+        tone: 'info'
+      });
+    }
+
+    if (overdueCount > 0 || soonCount > 0) {
+      tasks.push({
+        title: `期限注意：${overdueCount + soonCount}名`,
+        detail: `期限超過 ${overdueCount}名、期限間近 ${soonCount}名です。優先して確認してください。`,
+        tone: overdueCount > 0 ? 'danger' : 'warning'
+      });
+    }
+
+    if (!tasks.length) {
+      tasks.push({
+        title: '大きな要確認はありません',
+        detail: '必要に応じて進捗Excelを出力し、共有フォルダへ保存してください。',
+        tone: 'success'
+      });
+    }
+
+    return tasks.slice(0, 6);
+  }, [
+    applicants.length,
+    confirmationPendingCount,
+    dietaryAttentionApplicants.length,
+    overdueCount,
+    pendingCount,
+    soonCount,
+    unsetDueDateCount,
+    visaDocumentsPendingCount,
+    visaRequirementUncheckedCount
+  ]);
 
   const filteredApplicants = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
@@ -1831,6 +1922,80 @@ function App() {
       </section>
 
       {importMessage && <p className="import-message">{importMessage}</p>}
+
+      <section className="workflow-panel">
+        <div className="workflow-header">
+          <div>
+            <h2>作業ステップ</h2>
+            <p>上から順番に進めると、共有Excel正本運用で迷いにくくなります。</p>
+          </div>
+          <button type="button" onClick={() => setShowGuide((current) => !current)}>
+            {showGuide ? '使い方を閉じる' : '使い方を見る'}
+          </button>
+        </div>
+
+        <div className="workflow-steps">
+          <div className={`workflow-step ${applicants.length ? 'is-done' : 'is-current'}`}>
+            <span>STEP 1</span>
+            <strong>正本Excel読込</strong>
+            <small>最新版を最初に読む</small>
+          </div>
+          <div className={`workflow-step ${applicants.length ? 'is-current' : ''}`}>
+            <span>STEP 2</span>
+            <strong>最新Forms反映</strong>
+            <small>新規応募者だけ追加</small>
+          </div>
+          <div className={`workflow-step ${pendingCount || confirmationPendingCount ? 'is-current' : applicants.length ? 'is-done' : ''}`}>
+            <span>STEP 3</span>
+            <strong>未提出・未確認</strong>
+            <small>書類・確認事項を見る</small>
+          </div>
+          <div className={`workflow-step ${visaRequirementUncheckedCount || visaDocumentsPendingCount ? 'is-current' : applicants.length ? 'is-done' : ''}`}>
+            <span>STEP 4</span>
+            <strong>個人ページ対応</strong>
+            <small>ビザ・食事・履歴を記録</small>
+          </div>
+          <div className="workflow-step">
+            <span>STEP 5</span>
+            <strong>進捗Excel出力</strong>
+            <small>作業後に必ず出力</small>
+          </div>
+          <div className="workflow-step">
+            <span>STEP 6</span>
+            <strong>共有フォルダ保存</strong>
+            <small>最新版として保存</small>
+          </div>
+        </div>
+
+        {showGuide && (
+          <div className="guide-box">
+            <h3>はじめて使う人向けの簡単な流れ</h3>
+            <ol>
+              <li>共有フォルダから最新版の進捗Excelをダウンロードし、「正本Excel」で読み込みます。</li>
+              <li>MS Formsの最新Excelがある場合だけ、「MS Forms最新Excelを追加反映」で新規応募者を追加します。</li>
+              <li>氏名一覧または一覧表から学生名をクリックし、個人ページで提出状況・ビザ・食事制限・メモを確認します。</li>
+              <li>対応した内容は、個人ページの「対応履歴を追加」または各チェック欄に記録します。</li>
+              <li>作業後は「進捗Excelを出力」し、出力されたExcelを共有フォルダに保存します。</li>
+            </ol>
+            <p>注意：複数人が同時に別々のExcelを更新すると上書き事故になります。作業前に最新版を読み、作業後に新しいファイル名で保存してください。</p>
+          </div>
+        )}
+
+        <div className="today-tasks">
+          <div className="today-tasks-heading">
+            <h3>今日やること</h3>
+            <span>{todayTaskItems.length}件</span>
+          </div>
+          <div className="today-task-grid">
+            {todayTaskItems.map((task) => (
+              <article key={task.title} className={`today-task-card task-${task.tone}`}>
+                <strong>{task.title}</strong>
+                <p>{task.detail}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {!!applicants.length && (
         <section className="summary-cards">
