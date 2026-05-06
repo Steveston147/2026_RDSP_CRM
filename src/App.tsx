@@ -52,14 +52,22 @@ const getValue = (row: Record<string, unknown>, keys: string[]): unknown => {
   return '';
 };
 
+const formatDateParts = (year: number, month: number, day: number, separator: '/' | '-'): string => {
+  const yyyy = year.toString().padStart(4, '0');
+  const mm = month.toString().padStart(2, '0');
+  const dd = day.toString().padStart(2, '0');
+  return [yyyy, mm, dd].join(separator);
+};
+
 const formatDate = (value: unknown, separator: '/' | '-'): string => {
   if (typeof value === 'number') {
     const parsed = XLSX.SSF.parse_date_code(value);
     if (!parsed) return '';
-    const yyyy = parsed.y.toString().padStart(4, '0');
-    const mm = parsed.m.toString().padStart(2, '0');
-    const dd = parsed.d.toString().padStart(2, '0');
-    return [yyyy, mm, dd].join(separator);
+    return formatDateParts(parsed.y, parsed.m, parsed.d, separator);
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return formatDateParts(value.getFullYear(), value.getMonth() + 1, value.getDate(), separator);
   }
 
   const text = toString(value);
@@ -79,7 +87,7 @@ const formatDueDate = (value: unknown): string => formatDate(value, '-');
 
 const toBool = (value: unknown): boolean => {
   const text = toString(value).toLowerCase();
-  return text === '提出済み' || text === 'true' || text === '1' || text === 'yes';
+  return text === '提出済み' || text === '済' || text === 'true' || text === '1' || text === 'yes';
 };
 
 const makeId = (name: string, index: number) => `${name || 'applicant'}-${index}`;
