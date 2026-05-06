@@ -2155,3 +2155,332 @@ textarea {
     max-height: 42px !important;
   }
 }
+/* Three-column professional CRM layout override - 2026-05-06
+   Keep existing functions unchanged. This section only adjusts spacing, column rhythm, and print balance. */
+:root {
+  --ui-bg: #f1f3f5;
+  --ui-surface: #ffffff;
+  --ui-border: #b9c2cc;
+  --ui-border-strong: #7f8a96;
+  --ui-text: #1f2328;
+  --ui-muted: #4f5965;
+  --ui-accent: #244d7d;
+  --ui-accent-soft: #eef4fb;
+}
+
+body {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-size: 15.5px;
+}
+
+.container {
+  max-width: 1920px;
+  padding: 24px 26px;
+}
+
+.crm-page {
+  font-size: 15.5px;
+  margin-top: 18px;
+}
+
+.crm-topbar {
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.crm-topbar button,
+.crm-section-card button,
+.primary-action {
+  padding: 8px 12px;
+  font-size: 14.5px;
+  border-radius: 5px;
+}
+
+.crm-hero {
+  padding: 18px 20px;
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  background: var(--ui-surface);
+  box-shadow: none;
+}
+
+.crm-hero h2 {
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.crm-kicker {
+  font-size: 12.5px;
+}
+
+.crm-email {
+  font-size: 15.5px;
+}
+
+/* Make the personal confirmation page follow a steady 3-column rhythm. */
+.crm-meta-grid,
+.crm-status-board,
+.dietary-detail-grid,
+.checkbox-group,
+.crm-form-grid,
+.communication-form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.crm-meta-grid {
+  gap: 12px;
+  margin: 16px 0 18px;
+}
+
+.crm-meta-grid > div {
+  padding: 12px 13px;
+  border-radius: 6px;
+  border-color: var(--ui-border);
+}
+
+.crm-meta-grid span {
+  font-size: 12.5px;
+  color: var(--ui-muted);
+}
+
+.crm-meta-grid strong {
+  font-size: 15.5px;
+  line-height: 1.35;
+}
+
+.crm-layout {
+  grid-template-columns: minmax(0, 1fr) 440px;
+  gap: 18px;
+}
+
+.crm-main,
+.crm-side {
+  gap: 16px;
+}
+
+.crm-section-card {
+  padding: 16px 17px;
+  border: 1px solid var(--ui-border);
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.crm-section-card h3 {
+  margin: 0 0 13px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--ui-border);
+  font-size: 18.5px;
+  line-height: 1.25;
+}
+
+.crm-section-card h4 {
+  font-size: 15.5px;
+}
+
+.crm-section-card label {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.crm-section-card input[type='text'],
+.crm-section-card input[type='date'],
+.crm-section-card input[type='url'],
+.crm-section-card input[type='number'],
+.crm-section-card textarea,
+.communication-form-grid select {
+  margin-top: 5px;
+  padding: 8px 10px;
+  font-size: 14.5px;
+  border-color: var(--ui-border-strong);
+  border-radius: 5px;
+}
+
+.crm-section-card textarea {
+  min-height: 76px;
+}
+
+.crm-check-card {
+  grid-template-columns: 18px 1fr auto !important;
+  min-height: 48px;
+  gap: 9px !important;
+  padding: 9px 11px !important;
+  border-radius: 5px;
+  background: #f7f9fb;
+  font-size: 14.5px;
+}
+
+.crm-check-card strong {
+  font-size: 13.5px;
+}
+
+.inline-check {
+  padding: 8px 10px !important;
+  border-radius: 5px;
+  font-size: 14.5px;
+}
+
+.inline-check input,
+.crm-check-card input {
+  width: 15px;
+  height: 15px;
+}
+
+.dietary-detail-card {
+  padding: 13px;
+  border-radius: 6px;
+  background: #f7f9fb;
+}
+
+/* Reset earlier wide/span rules so form areas also visually follow three columns. */
+.communication-form-grid label,
+.crm-form-grid label {
+  grid-column: auto !important;
+}
+
+.communication-form-grid label:nth-of-type(5),
+.communication-form-grid label:nth-of-type(6),
+.communication-form-grid label:nth-of-type(7),
+.crm-form-grid label:nth-of-type(1),
+.crm-form-grid label:nth-of-type(4),
+.crm-form-grid label:nth-of-type(5) {
+  grid-column: auto !important;
+}
+
+.communication-form-grid {
+  gap: 12px;
+}
+
+.crm-form-grid {
+  gap: 12px;
+}
+
+.crm-timeline {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.crm-timeline-item {
+  padding: 12px;
+  border-radius: 5px;
+  background: #f7f9fb;
+}
+
+.crm-timeline-item span {
+  font-size: 12.5px;
+}
+
+.crm-timeline-item pre {
+  max-height: 190px;
+  font-size: 14px;
+  line-height: 1.48;
+}
+
+.crm-timeline-primary {
+  grid-column: auto !important;
+}
+
+.crm-suggestion {
+  padding: 12px;
+  font-size: 14.5px;
+  line-height: 1.48;
+  border-color: #b7c7d8;
+  border-radius: 5px;
+  background: var(--ui-accent-soft);
+}
+
+.visa-section-card {
+  border-color: #9eb8d4 !important;
+  background: #fbfdff !important;
+}
+
+.visa-status-pill,
+.deadline-badge,
+.crm-completion-pill {
+  padding: 4px 9px;
+  font-size: 12.5px;
+}
+
+.empty-note {
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1600px) {
+  .crm-meta-grid,
+  .crm-status-board,
+  .dietary-detail-grid,
+  .checkbox-group,
+  .crm-form-grid,
+  .communication-form-grid,
+  .crm-timeline {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1300px) {
+  .crm-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-meta-grid,
+  .crm-status-board,
+  .dietary-detail-grid,
+  .checkbox-group,
+  .crm-form-grid,
+  .communication-form-grid,
+  .crm-timeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .crm-meta-grid,
+  .crm-status-board,
+  .dietary-detail-grid,
+  .checkbox-group,
+  .crm-form-grid,
+  .communication-form-grid,
+  .crm-timeline {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Keep applicant print compact, but use the same three-column visual logic. */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 7mm;
+  }
+
+  body[data-print-mode='applicant'] .crm-meta-grid,
+  body[data-print-mode='applicant'] .crm-status-board,
+  body[data-print-mode='applicant'] .dietary-detail-grid,
+  body[data-print-mode='applicant'] .checkbox-group,
+  body[data-print-mode='applicant'] .crm-form-grid,
+  body[data-print-mode='applicant'] .communication-form-grid,
+  body[data-print-mode='applicant'] .crm-timeline {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-section-card {
+    padding: 5px !important;
+    margin-bottom: 4px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-section-card h3 {
+    font-size: 10.8px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-check-card {
+    min-height: 23px !important;
+    font-size: 9px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-timeline-item pre {
+    max-height: 34px !important;
+    overflow: hidden !important;
+  }
+}
