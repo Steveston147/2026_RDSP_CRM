@@ -684,9 +684,63 @@ td button {
   gap: 14px;
 }
 
-.crm-form-grid label:nth-of-type(3),
-.crm-form-grid label:nth-of-type(4) {
+.crm-form-grid label:nth-of-type(1),
+.crm-form-grid label:nth-of-type(4),
+.crm-form-grid label:nth-of-type(5) {
   grid-column: 1 / -1;
+}
+
+
+.crm-timeline-primary {
+  border-left-color: #0969da;
+  background: #f0f7ff;
+}
+
+.communication-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.communication-form-grid label:nth-of-type(5),
+.communication-form-grid label:nth-of-type(6),
+.communication-form-grid label:nth-of-type(7) {
+  grid-column: 1 / -1;
+}
+
+.communication-form-grid select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  font-weight: 400;
+}
+
+.communication-check {
+  display: flex !important;
+  gap: 8px;
+  align-items: center;
+  margin: 0 !important;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f6f8fa;
+}
+
+.communication-check input {
+  margin: 0;
+}
+
+.primary-action {
+  margin-top: 12px;
+  border-color: #0969da;
+  background: #0969da;
+  color: #fff;
+  font-weight: 700;
+}
+
+.primary-action:hover:not(:disabled) {
+  background: #0757b3;
 }
 
 .crm-next-action-card textarea {
@@ -725,7 +779,8 @@ td button {
 
   .crm-meta-grid,
   .crm-status-board,
-  .crm-form-grid {
+  .crm-form-grid,
+  .communication-form-grid {
     grid-template-columns: 1fr;
   }
 }

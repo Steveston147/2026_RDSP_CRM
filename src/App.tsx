@@ -20,6 +20,7 @@ type Applicant = {
   responseDate: string;
   pastedEmail: string;
   emailSummary: string;
+  communicationHistory: string;
   nextAction: string;
   reminderSent: boolean;
   reminderSentDate: string;
@@ -30,6 +31,20 @@ type Applicant = {
 
 type StatusFilter = 'all' | 'pending' | 'passportMissing' | 'enrollmentMissing' | 'completed';
 type DeadlineStatus = 'completed' | 'unset' | 'overdue' | 'soon' | 'ok';
+type CommunicationType = 'メール送信' | 'メール受信' | '電話' | '書類確認' | 'メモ' | 'その他';
+
+type CommunicationDraft = {
+  date: string;
+  type: CommunicationType;
+  staff: string;
+  subject: string;
+  body: string;
+  summary: string;
+  nextAction: string;
+  reflectNextAction: boolean;
+};
+
+const communicationTypeOptions: CommunicationType[] = ['メール送信', 'メール受信', '電話', '書類確認', 'メモ', 'その他'];
 
 const statusFilterOptions: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: '全員' },
@@ -70,6 +85,17 @@ const getTodayInputValue = () => {
     .map((part, index) => (index === 0 ? String(part) : String(part).padStart(2, '0')))
     .join('-');
 };
+
+const createInitialCommunicationDraft = (): CommunicationDraft => ({
+  date: getTodayInputValue(),
+  type: 'メール受信',
+  staff: '',
+  subject: '',
+  body: '',
+  summary: '',
+  nextAction: '',
+  reflectNextAction: false
+});
 
 const formatBirthDate = (value: unknown) => {
   if (value === undefined || value === null || String(value).trim() === '') return '';
@@ -287,6 +313,40 @@ const appendLine = (currentText: string, newLine: string) => {
   return trimmed ? `${trimmed}\n${newLine}` : newLine;
 };
 
+const createCommunicationRecordText = (draft: CommunicationDraft, applicant: Applicant) => {
+  const date = draft.date || getTodayInputValue();
+  const staff = draft.staff.trim() || applicant.staff || applicant.reminderStaff || '未入力';
+  const subject = draft.subject.trim();
+  const summary = draft.summary.trim();
+  const body = draft.body.trim();
+  const nextAction = draft.nextAction.trim();
+
+  return [
+    '---',
+    `Date: ${date}`,
+    `Type: ${draft.type}`,
+    `Staff: ${staff}`,
+    subject ? `Subject: ${subject}` : '',
+    summary ? `Summary: ${summary}` : '',
+    nextAction ? `Next Action: ${nextAction}` : '',
+    body ? '' : '',
+    body ? 'Body / Note:' : '',
+    body
+  ]
+    .filter((line, index, lines) => line !== '' || (index > 0 && index < lines.length - 1))
+    .join('\n')
+    .trim();
+};
+
+const createCommunicationSummaryLine = (draft: CommunicationDraft, applicant: Applicant) => {
+  const date = draft.date || getTodayInputValue();
+  const staff = draft.staff.trim() || applicant.staff || applicant.reminderStaff || '';
+  const subject = draft.subject.trim();
+  const summary = draft.summary.trim() || draft.body.trim().slice(0, 80);
+
+  return `${date} ${staff ? `${staff}：` : ''}${draft.type}${subject ? `（${subject}）` : ''}${summary ? `：${summary}` : ''}`;
+};
+
 const createApplicantFromRow = (row: Record<string, unknown>, index: number): Applicant => ({
   id: makeId(row, index),
   name: buildApplicantName(row),
@@ -309,6 +369,7 @@ const createApplicantFromRow = (row: Record<string, unknown>, index: number): Ap
   responseDate: formatInputDate(getCell(row, ['対応日', 'responseDate'])),
   pastedEmail: getText(row, ['過去メール', '過去メール貼付', 'pastedEmail']),
   emailSummary: getText(row, ['メール要約', 'emailSummary']),
+  communicationHistory: getText(row, ['やり取り履歴', 'Communication History', 'communicationHistory']),
   nextAction: getText(row, ['次にやること', '次アクション', 'nextAction']),
   reminderSent: parseSubmitted(getCell(row, ['リマインド済み', 'reminderSent'])),
   reminderSentDate: formatInputDate(getCell(row, ['リマインド送信日', 'reminderSentDate'])),
@@ -435,6 +496,7 @@ function App() {
   const [isApplicantPageOpen, setIsApplicantPageOpen] = useState(false);
   const [reminderApplicantId, setReminderApplicantId] = useState('');
   const [reminderStaffInput, setReminderStaffInput] = useState('');
+  const [communicationDraft, setCommunicationDraft] = useState<CommunicationDraft>(() => createInitialCommunicationDraft());
   const [importMessage, setImportMessage] = useState('');
 
   const selectedApplicant = useMemo(
@@ -578,6 +640,7 @@ function App() {
       対応日: a.responseDate,
       過去メール: a.pastedEmail,
       メール要約: a.emailSummary,
+      やり取り履歴: a.communicationHistory,
       次にやること: a.nextAction,
       リマインド済み: a.reminderSent ? '済' : '未',
       リマインド送信日: a.reminderSentDate,
@@ -609,7 +672,13 @@ function App() {
   };
 
   const openApplicantPage = (applicantId: string) => {
+    const applicant = applicants.find((a) => a.id === applicantId);
+
     setSelectedApplicantId(applicantId);
+    setCommunicationDraft({
+      ...createInitialCommunicationDraft(),
+      staff: applicant?.staff || applicant?.reminderStaff || reminderStaffInput
+    });
     setIsApplicantPageOpen(true);
 
     if (typeof window !== 'undefined') {
@@ -637,6 +706,42 @@ function App() {
   const copyReminderEmail = async () => {
     if (!reminderApplicant) return;
     await copyReminderEmailForApplicant(reminderApplicant);
+  };
+
+  const updateCommunicationDraft = (patch: Partial<CommunicationDraft>) => {
+    setCommunicationDraft((prev) => ({ ...prev, ...patch }));
+  };
+
+  const addCommunicationRecord = (applicant: Applicant) => {
+    const hasContent =
+      communicationDraft.subject.trim() ||
+      communicationDraft.body.trim() ||
+      communicationDraft.summary.trim() ||
+      communicationDraft.nextAction.trim();
+
+    if (!hasContent) return;
+
+    const recordText = createCommunicationRecordText(communicationDraft, applicant);
+    const summaryLine = createCommunicationSummaryLine(communicationDraft, applicant);
+    const staff = communicationDraft.staff.trim() || applicant.staff || applicant.reminderStaff;
+    const date = communicationDraft.date || getTodayInputValue();
+    const isEmailRecord = communicationDraft.type === 'メール送信' || communicationDraft.type === 'メール受信';
+    const emailRecord = isEmailRecord ? recordText : '';
+
+    updateApplicant(applicant.id, {
+      communicationHistory: appendLine(applicant.communicationHistory, recordText),
+      responseDetails: appendLine(applicant.responseDetails, summaryLine),
+      emailSummary: isEmailRecord ? appendLine(applicant.emailSummary, summaryLine) : applicant.emailSummary,
+      pastedEmail: emailRecord ? appendLine(applicant.pastedEmail, emailRecord) : applicant.pastedEmail,
+      staff: staff || applicant.staff,
+      responseDate: date,
+      nextAction: communicationDraft.reflectNextAction && communicationDraft.nextAction.trim() ? communicationDraft.nextAction.trim() : applicant.nextAction
+    });
+
+    setCommunicationDraft({
+      ...createInitialCommunicationDraft(),
+      staff
+    });
   };
 
   const markReminderAsSentForApplicant = (applicant: Applicant) => {
@@ -672,6 +777,7 @@ function App() {
       staff: staff || applicant.staff,
       responseDate: today,
       responseDetails: appendLine(applicant.responseDetails, logLine),
+      communicationHistory: appendLine(applicant.communicationHistory, emailLog),
       pastedEmail: appendLine(applicant.pastedEmail, emailLog),
       emailSummary: appendLine(applicant.emailSummary, summaryLine),
       nextAction: '返信待ち。未提出のまま数日経過した場合は、再リマインドまたは個別確認を行う。'
@@ -687,6 +793,7 @@ function App() {
     const missingDocuments = getMissingDocuments(applicant);
     const applicantNumber = selectedApplicantIndex >= 0 ? selectedApplicantIndex + 1 : '-';
     const hasAnyCommunication =
+      applicant.communicationHistory.trim() ||
       applicant.responseDetails.trim() ||
       applicant.reminderNote.trim() ||
       applicant.pastedEmail.trim() ||
@@ -791,6 +898,12 @@ function App() {
               <h3>やり取り履歴・メール記録</h3>
               {hasAnyCommunication ? (
                 <div className="crm-timeline">
+                  {applicant.communicationHistory.trim() && (
+                    <article className="crm-timeline-item crm-timeline-primary">
+                      <span>時系列メモ・対応履歴</span>
+                      <pre>{applicant.communicationHistory}</pre>
+                    </article>
+                  )}
                   {applicant.responseDetails.trim() && (
                     <article className="crm-timeline-item">
                       <span>対応内容</span>
@@ -822,8 +935,100 @@ function App() {
             </section>
 
             <section className="crm-section-card">
+              <h3>対応履歴を追加</h3>
+              <p className="empty-note">学生からの連絡、こちらから送ったメール、電話、書類確認などをここに残せます。</p>
+              <div className="communication-form-grid">
+                <label>
+                  日付
+                  <input
+                    type="date"
+                    value={communicationDraft.date}
+                    onChange={(e) => updateCommunicationDraft({ date: e.target.value })}
+                  />
+                </label>
+                <label>
+                  種別
+                  <select
+                    value={communicationDraft.type}
+                    onChange={(e) => updateCommunicationDraft({ type: e.target.value as CommunicationType })}
+                  >
+                    {communicationTypeOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  担当者
+                  <input
+                    type="text"
+                    placeholder="例：田中"
+                    value={communicationDraft.staff}
+                    onChange={(e) => updateCommunicationDraft({ staff: e.target.value })}
+                  />
+                </label>
+                <label>
+                  件名・見出し
+                  <input
+                    type="text"
+                    placeholder="例：OneDrive linkについて問い合わせ"
+                    value={communicationDraft.subject}
+                    onChange={(e) => updateCommunicationDraft({ subject: e.target.value })}
+                  />
+                </label>
+                <label>
+                  要約
+                  <textarea
+                    rows={3}
+                    placeholder="例：学生よりOneDriveリンクが開けないとの連絡あり。新しいリンクを案内する必要あり。"
+                    value={communicationDraft.summary}
+                    onChange={(e) => updateCommunicationDraft({ summary: e.target.value })}
+                  />
+                </label>
+                <label>
+                  本文・メモ貼付
+                  <textarea
+                    rows={7}
+                    placeholder="メール本文や電話メモを貼り付け"
+                    value={communicationDraft.body}
+                    onChange={(e) => updateCommunicationDraft({ body: e.target.value })}
+                  />
+                </label>
+                <label>
+                  次にやることへ入れる内容
+                  <textarea
+                    rows={3}
+                    placeholder="例：新しいOneDriveリンクを送る。"
+                    value={communicationDraft.nextAction}
+                    onChange={(e) => updateCommunicationDraft({ nextAction: e.target.value })}
+                  />
+                </label>
+                <label className="communication-check">
+                  <input
+                    type="checkbox"
+                    checked={communicationDraft.reflectNextAction}
+                    onChange={(e) => updateCommunicationDraft({ reflectNextAction: e.target.checked })}
+                  />
+                  <span>「次にやること」へ反映する</span>
+                </label>
+              </div>
+              <button type="button" className="primary-action" onClick={() => addCommunicationRecord(applicant)}>
+                この学生の対応履歴に追加
+              </button>
+            </section>
+
+            <section className="crm-section-card">
               <h3>記録・修正</h3>
               <div className="crm-form-grid">
+                <label>
+                  やり取り履歴
+                  <textarea
+                    rows={6}
+                    value={applicant.communicationHistory}
+                    onChange={(e) => updateApplicant(applicant.id, { communicationHistory: e.target.value })}
+                  />
+                </label>
                 <label>
                   対応内容
                   <textarea
