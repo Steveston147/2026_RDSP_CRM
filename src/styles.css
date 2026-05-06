@@ -28,6 +28,11 @@ h2 {
   font-size: 22px;
 }
 
+h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
 p {
   line-height: 1.5;
 }
@@ -63,6 +68,7 @@ input[type='search'],
 input[type='text'],
 input[type='date'],
 input[type='url'],
+input[type='number'],
 select,
 textarea {
   border: 1px solid #bbb;
@@ -102,6 +108,206 @@ button:disabled {
   border-color: #ddd;
   background: #eee;
   cursor: not-allowed;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.summary-card {
+  padding: 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.summary-card span {
+  display: block;
+  margin-bottom: 6px;
+  color: #57606a;
+  font-size: 13px;
+}
+
+.summary-card strong {
+  display: block;
+  font-size: 24px;
+}
+
+.summary-overdue {
+  border-color: #f1aeb5;
+  background: #fff5f5;
+}
+
+.summary-soon {
+  border-color: #ffe08a;
+  background: #fffbea;
+}
+
+.summary-unset {
+  background: #f6f8fa;
+}
+
+.summary-completed {
+  border-color: #b7e4c7;
+  background: #f0fff4;
+}
+
+.urgent-panel,
+.pending-reminders {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.urgent-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.urgent-item {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.urgent-item span {
+  font-weight: 700;
+}
+
+.urgent-item small {
+  color: #57606a;
+}
+
+.reminder-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.reminder-list {
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.reminder-card {
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.reminder-card.is-selected {
+  background: #f0f7ff;
+}
+
+.reminder-card p {
+  margin: 6px 0;
+  font-size: 13px;
+}
+
+.reminder-card-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reminder-textarea {
+  width: 100%;
+  min-height: 260px;
+  padding: 10px;
+  line-height: 1.5;
+}
+
+.reminder-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.reminder-actions label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.reminder-record {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+.reminder-note {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  line-height: 1.5;
+}
+
+.deadline-badge {
+  display: inline-block;
+  min-width: 82px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #d0d7de;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.deadline-completed {
+  color: #116329;
+  border-color: #b7e4c7;
+  background: #dafbe1;
+}
+
+.deadline-unset {
+  color: #57606a;
+  border-color: #d0d7de;
+  background: #f6f8fa;
+}
+
+.deadline-overdue {
+  color: #a40e26;
+  border-color: #ffb3ba;
+  background: #ffebe9;
+}
+
+.deadline-soon {
+  color: #7a4d00;
+  border-color: #f0cf65;
+  background: #fff8c5;
+}
+
+.deadline-ok {
+  color: #0969da;
+  border-color: #b6d7ff;
+  background: #ddf4ff;
+}
+
+.deadline-row-overdue {
+  background: #fff5f5;
+}
+
+.deadline-row-soon {
+  background: #fffbea;
+}
+
+.deadline-row-completed {
+  background: #f7fff8;
 }
 
 table {
@@ -175,6 +381,7 @@ td button {
 
 .applicant-detail input[type='text'],
 .applicant-detail input[type='date'],
+.applicant-detail input[type='number'],
 .applicant-detail textarea {
   display: block;
   width: 100% !important;
@@ -186,19 +393,30 @@ td button {
   min-height: 92px;
 }
 
-.applicant-detail label:nth-of-type(6),
-.applicant-detail label:nth-of-type(7),
-.applicant-detail label:nth-of-type(8) {
+.applicant-detail label:nth-of-type(9),
+.applicant-detail label:nth-of-type(10),
+.applicant-detail label:nth-of-type(11),
+.applicant-detail label:nth-of-type(12) {
   grid-column: 1 / -1;
 }
 
-.applicant-detail label:nth-of-type(6) textarea {
+.applicant-detail label:nth-of-type(10) textarea {
   min-height: 160px;
 }
 
-.applicant-detail label:nth-of-type(7) textarea,
-.applicant-detail label:nth-of-type(8) textarea {
+.applicant-detail label:nth-of-type(11) textarea,
+.applicant-detail label:nth-of-type(12) textarea {
   min-height: 120px;
+}
+
+@media (max-width: 1100px) {
+  .summary-cards {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+  }
+
+  .reminder-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
@@ -221,6 +439,7 @@ td button {
   input[type='text'],
   input[type='date'],
   input[type='url'],
+  input[type='number'],
   select {
     width: 100%;
   }
@@ -233,5 +452,9 @@ td button {
 
   .applicant-detail > div {
     grid-template-columns: 1fr;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
   }
 }

@@ -29,6 +29,7 @@ type Applicant = {
 };
 
 type StatusFilter = 'all' | 'pending' | 'passportMissing' | 'enrollmentMissing' | 'completed';
+type DeadlineStatus = 'completed' | 'unset' | 'overdue' | 'soon' | 'ok';
 
 const statusFilterOptions: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: '全員' },
@@ -128,6 +129,65 @@ const getMissingDocuments = (applicant: Applicant) => {
   return missing;
 };
 
+const isCompleted = (applicant: Applicant) => applicant.passportSubmitted && applicant.enrollmentSubmitted;
+
+const getDateOnly = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+const parseDateInput = (value: string) => {
+  if (!value) return null;
+
+  const match = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/) || value.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  if (!year || month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+
+  return date;
+};
+
+const getDaysUntilDue = (dueDate: string) => {
+  const parsedDueDate = parseDateInput(dueDate);
+  if (!parsedDueDate) return null;
+
+  const today = getDateOnly(new Date());
+  const due = getDateOnly(parsedDueDate);
+  return Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+};
+
+const getDeadlineStatus = (applicant: Applicant): DeadlineStatus => {
+  if (isCompleted(applicant)) return 'completed';
+
+  const daysUntilDue = getDaysUntilDue(applicant.dueDate);
+  if (daysUntilDue === null) return 'unset';
+  if (daysUntilDue < 0) return 'overdue';
+  if (daysUntilDue <= 7) return 'soon';
+
+  return 'ok';
+};
+
+const getDeadlineLabel = (applicant: Applicant) => {
+  const status = getDeadlineStatus(applicant);
+  const daysUntilDue = getDaysUntilDue(applicant.dueDate);
+
+  if (status === 'completed') return '完了';
+  if (status === 'unset') return '期限未設定';
+  if (status === 'overdue') return `期限超過 ${Math.abs(daysUntilDue ?? 0)}日`;
+  if (status === 'soon') {
+    if (daysUntilDue === 0) return '本日期限';
+    return `期限間近 あと${daysUntilDue}日`;
+  }
+
+  return `期限OK あと${daysUntilDue}日`;
+};
+
+const getDeadlineClassName = (applicant: Applicant) => `deadline-badge deadline-${getDeadlineStatus(applicant)}`;
+
 const getFirstNameForEmail = (name: string) => {
   const first = name.trim().split(/\s+/)[0];
   return first || name || 'there';
@@ -174,8 +234,18 @@ const createNextActionSuggestion = (applicant: Applicant) => {
     return '書類は完了しています。進捗Excelを出力し、必要に応じて最終確認を行ってください。';
   }
 
+  const deadlineStatus = getDeadlineStatus(applicant);
+  const deadlineLabel = getDeadlineLabel(applicant);
   const dueDateText = applicant.dueDate ? `提出期限（${applicant.dueDate}）` : '提出期限';
   const requestText = missingItems.join('、');
+
+  if (deadlineStatus === 'overdue') {
+    return `${requestText}が未提出で、${deadlineLabel}です。至急リマインドし、必要に応じて個別確認してください。`;
+  }
+
+  if (deadlineStatus === 'soon') {
+    return `${requestText}が未提出で、${deadlineLabel}です。早めにリマインドし、提出状況を確認してください。`;
+  }
 
   if (applicant.reminderSent || applicant.reminderCount > 0) {
     return `${requestText}が未提出です。リマインド送信済みのため、返信を確認し、数日後も未提出なら再リマインドしてください。`;
@@ -236,6 +306,11 @@ function App() {
     [applicants]
   );
 
+  const urgentApplicants = useMemo(
+    () => pendingApplicants.filter((applicant) => ['overdue', 'soon'].includes(getDeadlineStatus(applicant))),
+    [pendingApplicants]
+  );
+
   const reminderApplicant = useMemo(() => {
     if (!pendingApplicants.length) return null;
 
@@ -243,6 +318,19 @@ function App() {
   }, [pendingApplicants, reminderApplicantId]);
 
   const pendingCount = pendingApplicants.length;
+  const overdueCount = useMemo(
+    () => applicants.filter((applicant) => getDeadlineStatus(applicant) === 'overdue').length,
+    [applicants]
+  );
+  const soonCount = useMemo(
+    () => applicants.filter((applicant) => getDeadlineStatus(applicant) === 'soon').length,
+    [applicants]
+  );
+  const unsetDueDateCount = useMemo(
+    () => applicants.filter((applicant) => getDeadlineStatus(applicant) === 'unset').length,
+    [applicants]
+  );
+  const completedCount = useMemo(() => applicants.filter(isCompleted).length, [applicants]);
 
   const filteredApplicants = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
@@ -328,6 +416,7 @@ function App() {
       パスポートコピー: a.passportSubmitted ? '提出済み' : '未提出',
       在籍証明書: a.enrollmentSubmitted ? '提出済み' : '未提出',
       提出期限: a.dueDate,
+      期限状況: getDeadlineLabel(a),
       OneDriveリンク: a.oneDriveLink,
       メモ: a.memo,
       特別リクエスト: a.specialRequest,
@@ -386,7 +475,8 @@ function App() {
     const missingItems = getMissingDocuments(reminderApplicant)
       .map((item) => item.jp)
       .join('、');
-    const logLine = `${today} ${staff ? `${staff}：` : ''}リマインドメール送信（${nextCount}回目／未提出：${missingItems}）`;
+    const deadlineInfo = getDeadlineLabel(reminderApplicant);
+    const logLine = `${today} ${staff ? `${staff}：` : ''}リマインドメール送信（${nextCount}回目／未提出：${missingItems}／${deadlineInfo}）`;
 
     updateApplicant(reminderApplicant.id, {
       reminderSent: true,
@@ -446,61 +536,87 @@ function App() {
         </button>
       </section>
 
+      {!!applicants.length && (
+        <section className="summary-cards">
+          <div className="summary-card">
+            <span>全体</span>
+            <strong>{applicants.length}名</strong>
+          </div>
+          <div className="summary-card">
+            <span>未完了</span>
+            <strong>{pendingCount}名</strong>
+          </div>
+          <div className="summary-card summary-overdue">
+            <span>期限超過</span>
+            <strong>{overdueCount}名</strong>
+          </div>
+          <div className="summary-card summary-soon">
+            <span>期限間近</span>
+            <strong>{soonCount}名</strong>
+          </div>
+          <div className="summary-card summary-unset">
+            <span>期限未設定</span>
+            <strong>{unsetDueDateCount}名</strong>
+          </div>
+          <div className="summary-card summary-completed">
+            <span>完了</span>
+            <strong>{completedCount}名</strong>
+          </div>
+        </section>
+      )}
+
       <p>未完了：{pendingCount}名 / 全体：{applicants.length}名</p>
       <p>表示中：{filteredApplicants.length}名</p>
 
+      {!!applicants.length && urgentApplicants.length > 0 && (
+        <section className="urgent-panel">
+          <h2>優先確認リスト</h2>
+          <p>期限超過または期限まで7日以内の未完了者です。</p>
+          <div className="urgent-list">
+            {urgentApplicants.slice(0, 10).map((applicant) => (
+              <button
+                key={applicant.id}
+                type="button"
+                className={`urgent-item deadline-row-${getDeadlineStatus(applicant)}`}
+                onClick={() => openReminderForApplicant(applicant.id)}
+              >
+                <strong>{applicant.name || '氏名未入力'}</strong>
+                <span>{getDeadlineLabel(applicant)}</span>
+                <small>{getMissingDocuments(applicant).map((item) => item.jp).join('、')}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {!!applicants.length && (
-        <section
-          className="pending-reminders"
-          style={{
-            margin: '18px 0',
-            padding: '16px',
-            border: '1px solid #d0d7de',
-            borderRadius: '12px',
-            background: '#fff'
-          }}
-        >
+        <section className="pending-reminders">
           <h2>未提出者リスト・リマインド文面</h2>
 
           {pendingApplicants.length ? (
             <>
               <p>未提出者：{pendingApplicants.length}名</p>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'minmax(260px, 360px) 1fr',
-                  gap: '16px',
-                  alignItems: 'start'
-                }}
-              >
-                <div
-                  style={{
-                    maxHeight: '360px',
-                    overflow: 'auto',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px'
-                  }}
-                >
+              <div className="reminder-grid">
+                <div className="reminder-list">
                   {pendingApplicants.map((applicant) => {
                     const missingItems = getMissingDocuments(applicant).map((item) => item.jp);
 
                     return (
                       <div
                         key={applicant.id}
-                        style={{
-                          padding: '10px',
-                          borderBottom: '1px solid #e5e7eb',
-                          background: reminderApplicant?.id === applicant.id ? '#f0f7ff' : '#fff'
-                        }}
+                        className={`reminder-card ${reminderApplicant?.id === applicant.id ? 'is-selected' : ''}`}
                       >
-                        <strong>{applicant.name || '氏名未入力'}</strong>
-                        <p style={{ margin: '6px 0' }}>未提出：{missingItems.join('、')}</p>
-                        <p style={{ margin: '6px 0', fontSize: '13px' }}>
+                        <div className="reminder-card-header">
+                          <strong>{applicant.name || '氏名未入力'}</strong>
+                          <span className={getDeadlineClassName(applicant)}>{getDeadlineLabel(applicant)}</span>
+                        </div>
+                        <p>未提出：{missingItems.join('、')}</p>
+                        <p>
                           期限：{applicant.dueDate || '未設定'} ／ OneDrive：
                           {applicant.oneDriveLink.trim() ? '設定済み' : '未設定'}
                         </p>
-                        <p style={{ margin: '6px 0', fontSize: '13px' }}>
+                        <p>
                           リマインド：
                           {applicant.reminderCount > 0
                             ? `${applicant.reminderCount}回（最終：${applicant.reminderSentDate || '日付未入力'}）`
@@ -517,28 +633,18 @@ function App() {
                 <div>
                   {reminderApplicant ? (
                     <>
-                      <h3 style={{ marginTop: 0 }}>{reminderApplicant.name} 宛リマインド文面</h3>
+                      <h3>
+                        {reminderApplicant.name} 宛リマインド文面{' '}
+                        <span className={getDeadlineClassName(reminderApplicant)}>{getDeadlineLabel(reminderApplicant)}</span>
+                      </h3>
                       <textarea
                         readOnly
                         rows={14}
                         value={createReminderEmail(reminderApplicant)}
-                        style={{
-                          width: '100%',
-                          minHeight: '260px',
-                          padding: '10px',
-                          lineHeight: '1.5'
-                        }}
+                        className="reminder-textarea"
                       />
 
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: '8px',
-                          marginTop: '8px',
-                          flexWrap: 'wrap',
-                          alignItems: 'center'
-                        }}
-                      >
+                      <div className="reminder-actions">
                         <label>
                           送信担当者:
                           <input
@@ -546,7 +652,6 @@ function App() {
                             placeholder="例：田中"
                             value={reminderStaffInput}
                             onChange={(e) => setReminderStaffInput(e.target.value)}
-                            style={{ marginLeft: '6px' }}
                           />
                         </label>
                         <button type="button" onClick={copyReminderEmail}>
@@ -567,24 +672,14 @@ function App() {
                         </button>
                       </div>
 
-                      <p style={{ margin: '10px 0 0', fontSize: '13px' }}>
+                      <p className="reminder-record">
                         記録：{reminderApplicant.reminderCount}回 ／ 最終送信日：
                         {reminderApplicant.reminderSentDate || '未送信'} ／ 担当者：
                         {reminderApplicant.reminderStaff || '未入力'}
                       </p>
 
                       {reminderApplicant.reminderNote && (
-                        <textarea
-                          readOnly
-                          rows={4}
-                          value={reminderApplicant.reminderNote}
-                          style={{
-                            width: '100%',
-                            marginTop: '8px',
-                            padding: '10px',
-                            lineHeight: '1.5'
-                          }}
-                        />
+                        <textarea readOnly rows={4} value={reminderApplicant.reminderNote} className="reminder-note" />
                       )}
                     </>
                   ) : (
@@ -609,6 +704,7 @@ function App() {
             <th>パスポートコピー</th>
             <th>在籍証明書</th>
             <th>提出期限</th>
+            <th>期限状況</th>
             <th>OneDriveリンク</th>
             <th>リマインド</th>
             <th>詳細</th>
@@ -616,7 +712,7 @@ function App() {
         </thead>
         <tbody>
           {filteredApplicants.map((a) => (
-            <tr key={a.id}>
+            <tr key={a.id} className={`deadline-row-${getDeadlineStatus(a)}`}>
               <td>{a.name}</td>
               <td>{a.email}</td>
               <td>{a.birthDate}</td>
@@ -641,6 +737,9 @@ function App() {
                   value={a.dueDate}
                   onChange={(e) => updateApplicant(a.id, { dueDate: e.target.value })}
                 />
+              </td>
+              <td>
+                <span className={getDeadlineClassName(a)}>{getDeadlineLabel(a)}</span>
               </td>
               <td>
                 <input
@@ -670,23 +769,14 @@ function App() {
           ))}
           {!filteredApplicants.length && (
             <tr>
-              <td colSpan={10}>該当する応募者はいません。</td>
+              <td colSpan={11}>該当する応募者はいません。</td>
             </tr>
           )}
         </tbody>
       </table>
 
       {selectedApplicant && (
-        <section
-          className="applicant-detail"
-          style={{
-            marginTop: '24px',
-            padding: '16px',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            background: '#fafafa'
-          }}
-        >
+        <section className="applicant-detail">
           <h2>{selectedApplicant.name} 詳細</h2>
 
           <p>
@@ -697,6 +787,10 @@ function App() {
             <strong>進捗：</strong>
             パスポートコピー：{selectedApplicant.passportSubmitted ? '提出済み' : '未提出'} ／
             在籍証明書：{selectedApplicant.enrollmentSubmitted ? '提出済み' : '未提出'}
+          </p>
+          <p>
+            <strong>期限状況：</strong>
+            <span className={getDeadlineClassName(selectedApplicant)}>{getDeadlineLabel(selectedApplicant)}</span>
           </p>
           <p>
             <strong>リマインド：</strong>
@@ -713,14 +807,13 @@ function App() {
             提案を「次にやること」へ反映
           </button>
 
-          <div style={{ display: 'grid', gap: '12px', marginTop: '16px' }}>
+          <div>
             <label>
               メモ
               <textarea
                 rows={3}
                 value={selectedApplicant.memo}
                 onChange={(e) => updateApplicant(selectedApplicant.id, { memo: e.target.value })}
-                style={{ display: 'block', width: '100%' }}
               />
             </label>
 
@@ -730,7 +823,6 @@ function App() {
                 rows={3}
                 value={selectedApplicant.specialRequest}
                 onChange={(e) => updateApplicant(selectedApplicant.id, { specialRequest: e.target.value })}
-                style={{ display: 'block', width: '100%' }}
               />
             </label>
 
@@ -740,7 +832,6 @@ function App() {
                 rows={3}
                 value={selectedApplicant.responseDetails}
                 onChange={(e) => updateApplicant(selectedApplicant.id, { responseDetails: e.target.value })}
-                style={{ display: 'block', width: '100%' }}
               />
             </label>
 
@@ -750,7 +841,6 @@ function App() {
                 type="text"
                 value={selectedApplicant.staff}
                 onChange={(e) => updateApplicant(selectedApplicant.id, { staff: e.target.value })}
-                style={{ display: 'block', width: '100%' }}
               />
             </label>
 
@@ -778,7 +868,6 @@ function App() {
                 type="text"
                 value={selectedApplicant.reminderStaff}
                 onChange={(e) => updateApplicant(selectedApplicant.id, { reminderStaff: e.target.value })}
-                style={{ display: 'block', width: '100%' }}
               />
             </label>
 
@@ -791,7 +880,6 @@ function App() {
                 onChange={(e) =>
                   updateApplicant(selectedApplicant.id, { reminderCount: Number(e.target.value) || 0 })
                 }
-                style={{ display: 'block', width: '100%' }}
               />
             </label>
 
@@ -801,7 +889,6 @@ function App() {
                 rows={4}
                 value={selectedApplicant.reminderNote}
                 onChange={(e) => updateApplicant(selectedApplicant.id, { reminderNote: e.target.value })}
-                style={{ display: 'block', width: '100%' }}
               />
             </label>
 
@@ -811,7 +898,6 @@ function App() {
                 rows={6}
                 value={selectedApplicant.pastedEmail}
                 onChange={(e) => updateApplicant(selectedApplicant.id, { pastedEmail: e.target.value })}
-                style={{ display: 'block', width: '100%' }}
               />
             </label>
 
@@ -821,7 +907,6 @@ function App() {
                 rows={4}
                 value={selectedApplicant.emailSummary}
                 onChange={(e) => updateApplicant(selectedApplicant.id, { emailSummary: e.target.value })}
-                style={{ display: 'block', width: '100%' }}
               />
             </label>
 
@@ -831,7 +916,6 @@ function App() {
                 rows={4}
                 value={selectedApplicant.nextAction}
                 onChange={(e) => updateApplicant(selectedApplicant.id, { nextAction: e.target.value })}
-                style={{ display: 'block', width: '100%' }}
               />
             </label>
           </div>
