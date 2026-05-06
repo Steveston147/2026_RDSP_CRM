@@ -443,6 +443,10 @@ function App() {
     setApplicants((prev) => prev.map((a) => ({ ...a, dueDate })));
   };
 
+  const applyDueDateToUnsetOnly = () => {
+    setApplicants((prev) => prev.map((a) => (getDeadlineStatus(a) === 'unset' ? { ...a, dueDate } : a)));
+  };
+
   const applySuggestedNextAction = () => {
     if (!selectedApplicant) return;
 
@@ -530,6 +534,9 @@ function App() {
 
         <button onClick={applyDueDate} disabled={!applicants.length || !dueDate}>
           全員に期日を適用
+        </button>
+        <button onClick={applyDueDateToUnsetOnly} disabled={!applicants.length || !dueDate || unsetDueDateCount === 0}>
+          期限未設定者のみに適用
         </button>
         <button onClick={exportStatus} disabled={!applicants.length}>
           進捗Excelを出力
