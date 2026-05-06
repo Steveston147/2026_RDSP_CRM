@@ -164,23 +164,6 @@ const createNextActionSuggestion = (applicant: Applicant) => {
 
 const createReminderEmail = (applicant: Applicant) => {
   const missingDocuments = getMissingDocuments(applicant);
-
-  if (!missingDocuments.length) {
-    return `Dear ${getFirstNameForEmail(applicant.name)},
-
-Thank you very much for submitting the required documents.
-
-At this moment, we have confirmed the following documents:
-
-- Passport copy
-- Certificate of enrollment
-
-If we need any further information, we will contact you again.
-
-Best regards,
-Ritsumeikan Study Abroad Center`;
-  }
-
   const missingList = missingDocuments.map((item) => `- ${item.en}`).join('\n');
   const dueDateLine = applicant.dueDate
     ? `Please upload them by ${formatEnglishDate(applicant.dueDate)}.`
@@ -216,15 +199,16 @@ function App() {
     [applicants, selectedApplicantId]
   );
 
-  const reminderApplicant = useMemo(
-    () => applicants.find((applicant) => applicant.id === reminderApplicantId) ?? null,
-    [applicants, reminderApplicantId]
-  );
-
   const pendingApplicants = useMemo(
     () => applicants.filter((a) => !a.passportSubmitted || !a.enrollmentSubmitted),
     [applicants]
   );
+
+  const reminderApplicant = useMemo(() => {
+    if (!pendingApplicants.length) return null;
+
+    return pendingApplicants.find((applicant) => applicant.id === reminderApplicantId) ?? pendingApplicants[0];
+  }, [pendingApplicants, reminderApplicantId]);
 
   const pendingCount = pendingApplicants.length;
 
@@ -441,7 +425,7 @@ function App() {
                         style={{
                           padding: '10px',
                           borderBottom: '1px solid #e5e7eb',
-                          background: reminderApplicantId === applicant.id ? '#f0f7ff' : '#fff'
+                          background: reminderApplicant?.id === applicant.id ? '#f0f7ff' : '#fff'
                         }}
                       >
                         <strong>{applicant.name || '氏名未入力'}</strong>
@@ -683,4 +667,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
