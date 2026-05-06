@@ -1586,3 +1586,572 @@ td button {
     display: none !important;
   }
 }
+/* Professional balanced CRM layout - wider columns, larger text, more breathing room */
+:root {
+  --ui-bg: #f3f5f7;
+  --ui-surface: #ffffff;
+  --ui-border: #c9d1d9;
+  --ui-border-strong: #9da7b1;
+  --ui-text: #1f2328;
+  --ui-muted: #59636e;
+  --ui-accent: #2f5f98;
+  --ui-accent-soft: #eaf2fb;
+}
+
+body {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-size: 15px;
+}
+
+.container {
+  max-width: 1920px;
+  padding: 22px 24px;
+}
+
+button,
+input,
+select,
+textarea {
+  font-size: 14.5px;
+}
+
+button {
+  border-color: #8b949e;
+  border-radius: 5px;
+  background: #fff;
+  color: #1f2328;
+  font-weight: 600;
+}
+
+button:hover:not(:disabled) {
+  background: #eef2f6;
+}
+
+input[type='search'],
+input[type='text'],
+input[type='date'],
+input[type='url'],
+input[type='number'],
+select,
+textarea {
+  border-color: #9da7b1;
+  border-radius: 5px;
+  padding: 7px 9px;
+  color: #1f2328;
+}
+
+.crm-page {
+  margin-top: 18px;
+  font-size: 15px;
+}
+
+.crm-topbar {
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.crm-topbar button,
+.crm-section-card button {
+  padding: 7px 11px;
+  font-size: 14px;
+}
+
+.crm-hero {
+  padding: 16px 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  box-shadow: none;
+  background: var(--ui-surface);
+}
+
+.crm-hero h2 {
+  margin: 3px 0 5px;
+  font-size: 28px;
+  line-height: 1.22;
+  letter-spacing: 0.01em;
+}
+
+.crm-kicker {
+  font-size: 12px;
+  color: var(--ui-muted);
+}
+
+.crm-email {
+  font-size: 15px;
+  color: var(--ui-muted);
+}
+
+.crm-hero-badges {
+  gap: 8px;
+}
+
+.crm-meta-grid {
+  grid-template-columns: repeat(10, minmax(112px, 1fr));
+  gap: 9px;
+  margin: 14px 0 16px;
+}
+
+.crm-meta-grid > div {
+  padding: 10px 11px;
+  border: 1px solid var(--ui-border);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.crm-meta-grid span {
+  margin-bottom: 4px;
+  color: var(--ui-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.crm-meta-grid strong {
+  font-size: 14.5px;
+  line-height: 1.35;
+}
+
+.crm-layout {
+  grid-template-columns: minmax(0, 1fr) 430px;
+  gap: 15px;
+}
+
+.crm-main,
+.crm-side {
+  gap: 14px;
+}
+
+.crm-section-card {
+  padding: 14px 15px;
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.crm-section-card h3 {
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ui-border);
+  font-size: 18px;
+  line-height: 1.25;
+  color: #1f2328;
+}
+
+.crm-section-card h4 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.crm-section-card label {
+  margin-bottom: 9px;
+  line-height: 1.45;
+  color: #24292f;
+}
+
+.crm-section-card input[type='text'],
+.crm-section-card input[type='date'],
+.crm-section-card input[type='url'],
+.crm-section-card input[type='number'],
+.crm-section-card textarea,
+.communication-form-grid select {
+  margin-top: 5px;
+  padding: 7px 9px;
+  font-size: 14px;
+}
+
+.crm-section-card textarea {
+  min-height: 68px;
+}
+
+.crm-status-board {
+  grid-template-columns: repeat(4, minmax(170px, 1fr));
+  gap: 9px;
+}
+
+.crm-check-card {
+  grid-template-columns: 18px 1fr auto !important;
+  gap: 8px !important;
+  min-height: 45px;
+  padding: 8px 10px !important;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #f8fafc;
+  font-size: 14px;
+}
+
+.crm-check-card strong {
+  font-size: 13px;
+}
+
+.visa-status-row {
+  gap: 9px;
+  margin-top: 11px;
+}
+
+.visa-status-pill,
+.deadline-badge,
+.crm-completion-pill {
+  min-width: auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12.5px;
+}
+
+.dietary-detail-grid {
+  grid-template-columns: repeat(2, minmax(300px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.dietary-detail-card {
+  padding: 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 7px;
+  background: #f8fafc;
+}
+
+.checkbox-group {
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 7px;
+  margin: 10px 0;
+}
+
+.inline-check {
+  gap: 7px !important;
+  padding: 7px 9px !important;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.inline-check input,
+.crm-check-card input {
+  width: 15px;
+  height: 15px;
+}
+
+.empty-note {
+  margin: 6px 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.crm-timeline {
+  gap: 9px;
+}
+
+.crm-timeline-item {
+  padding: 10px 11px;
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.crm-timeline-item span {
+  margin-bottom: 6px;
+  font-size: 12.5px;
+}
+
+.crm-timeline-item pre {
+  max-height: 170px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.communication-form-grid {
+  grid-template-columns: 120px 150px 150px minmax(220px, 1fr) minmax(220px, 1fr);
+  gap: 11px;
+  margin-top: 12px;
+}
+
+.communication-form-grid label:nth-of-type(4) {
+  grid-column: auto;
+}
+
+.communication-form-grid label:nth-of-type(5) {
+  grid-column: span 2;
+}
+
+.communication-form-grid label:nth-of-type(6),
+.communication-form-grid label:nth-of-type(7) {
+  grid-column: span 2;
+}
+
+.communication-check {
+  padding: 8px 10px !important;
+  border-radius: 6px;
+}
+
+.primary-action {
+  margin-top: 12px;
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+}
+
+.primary-action:hover:not(:disabled) {
+  background: #244d7d;
+}
+
+.crm-form-grid {
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 11px;
+}
+
+.crm-form-grid label:nth-of-type(1),
+.crm-form-grid label:nth-of-type(4),
+.crm-form-grid label:nth-of-type(5) {
+  grid-column: span 3;
+}
+
+.crm-suggestion {
+  padding: 11px;
+  border-color: #b7c7d8;
+  border-radius: 6px;
+  background: var(--ui-accent-soft);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.crm-next-action-card textarea,
+.print-section-memo textarea,
+.print-section-staff input {
+  min-height: 70px;
+}
+
+.reminder-textarea {
+  min-height: 190px;
+}
+
+@media (max-width: 1600px) {
+  .crm-meta-grid {
+    grid-template-columns: repeat(8, minmax(112px, 1fr));
+  }
+
+  .crm-status-board {
+    grid-template-columns: repeat(3, minmax(170px, 1fr));
+  }
+
+  .checkbox-group {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 1300px) {
+  .crm-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-meta-grid {
+    grid-template-columns: repeat(4, minmax(130px, 1fr));
+  }
+
+  .communication-form-grid,
+  .crm-form-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+
+  .communication-form-grid label,
+  .crm-form-grid label {
+    grid-column: auto !important;
+  }
+
+  .communication-form-grid label:nth-of-type(5),
+  .communication-form-grid label:nth-of-type(6),
+  .communication-form-grid label:nth-of-type(7),
+  .crm-form-grid label:nth-of-type(1),
+  .crm-form-grid label:nth-of-type(4),
+  .crm-form-grid label:nth-of-type(5) {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .crm-page {
+    font-size: 14px;
+  }
+
+  .crm-meta-grid,
+  .crm-status-board,
+  .checkbox-group,
+  .crm-form-grid,
+  .communication-form-grid,
+  .dietary-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Professional A4 portrait print layout - readable but still compact */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 7mm;
+  }
+
+  html,
+  body {
+    width: 210mm;
+    min-height: 297mm;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 9.6px !important;
+    line-height: 1.28 !important;
+  }
+
+  body[data-print-mode='applicant'] h1 {
+    margin: 0 0 4mm !important;
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-page {
+    margin: 0 !important;
+    font-size: 9.6px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-hero {
+    padding: 6px 8px !important;
+    border: 1px solid #777 !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-hero h2 {
+    margin: 1px 0 2px !important;
+    font-size: 17px !important;
+    line-height: 1.12 !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-kicker,
+  body[data-print-mode='applicant'] .crm-email {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-meta-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 3px !important;
+    margin: 4px 0 5px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-meta-grid > div {
+    padding: 3px 5px !important;
+    border: 1px solid #aaa !important;
+    border-radius: 3px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-meta-grid span {
+    margin-bottom: 1px !important;
+    font-size: 8px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-meta-grid strong {
+    font-size: 9.4px !important;
+    line-height: 1.22 !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-layout {
+    display: grid !important;
+    grid-template-columns: 1.35fr 0.85fr !important;
+    gap: 5px !important;
+    align-items: start !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-section-card {
+    margin: 0 0 4px !important;
+    padding: 5px !important;
+    border: 1px solid #999 !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-section-card h3 {
+    margin: 0 0 4px !important;
+    padding-bottom: 2px !important;
+    border-bottom: 1px solid #bbb !important;
+    font-size: 10.6px !important;
+    line-height: 1.12 !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-status-board {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 3px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-check-card {
+    grid-template-columns: 12px 1fr auto !important;
+    min-height: 22px !important;
+    padding: 3px 4px !important;
+    gap: 3px !important;
+    border-radius: 2px !important;
+    font-size: 9px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-check-card strong {
+    font-size: 8px !important;
+  }
+
+  body[data-print-mode='applicant'] input[type='checkbox'] {
+    width: 10px !important;
+    height: 10px !important;
+  }
+
+  body[data-print-mode='applicant'] .dietary-detail-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 4px !important;
+    margin-top: 4px !important;
+  }
+
+  body[data-print-mode='applicant'] .dietary-detail-card {
+    padding: 4px !important;
+    border-radius: 2px !important;
+  }
+
+  body[data-print-mode='applicant'] .checkbox-group {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 2px !important;
+    margin: 3px 0 !important;
+  }
+
+  body[data-print-mode='applicant'] .inline-check {
+    gap: 3px !important;
+    padding: 2px 3px !important;
+    border: 0 !important;
+    font-size: 8.6px !important;
+  }
+
+  body[data-print-mode='applicant'] .visa-status-pill,
+  body[data-print-mode='applicant'] .deadline-badge,
+  body[data-print-mode='applicant'] .crm-completion-pill {
+    padding: 2px 5px !important;
+    font-size: 8px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-suggestion {
+    margin: 0 0 3px !important;
+    padding: 4px !important;
+    border-radius: 2px !important;
+    font-size: 9px !important;
+    line-height: 1.25 !important;
+  }
+
+  body[data-print-mode='applicant'] textarea,
+  body[data-print-mode='applicant'] input,
+  body[data-print-mode='applicant'] select {
+    min-height: 18px !important;
+    padding: 2px 3px !important;
+    font-size: 8.4px !important;
+    line-height: 1.2 !important;
+  }
+
+  body[data-print-mode='applicant'] textarea {
+    max-height: 34px !important;
+    overflow: hidden !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-next-action-card textarea,
+  body[data-print-mode='applicant'] .print-section-memo textarea {
+    max-height: 42px !important;
+  }
+}
