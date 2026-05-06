@@ -11,6 +11,35 @@ type Applicant = {
   nationality: string;
   passportSubmitted: boolean;
   enrollmentSubmitted: boolean;
+  photoSubmitted: boolean;
+  pledgeSubmitted: boolean;
+  flightInfoSubmitted: boolean;
+  visaDocumentSubmitted: boolean;
+  paymentConfirmed: boolean;
+  insuranceConfirmed: boolean;
+  dietaryRestrictionConfirmed: boolean;
+  arrivalInfoConfirmed: boolean;
+  hasFoodAllergy: boolean;
+  allergyEgg: boolean;
+  allergyMilk: boolean;
+  allergyWheat: boolean;
+  allergyBuckwheat: boolean;
+  allergyPeanut: boolean;
+  allergyTreeNuts: boolean;
+  allergyShrimpCrab: boolean;
+  allergyFish: boolean;
+  allergySoy: boolean;
+  allergySesame: boolean;
+  allergyOther: string;
+  hasReligiousDietaryRestriction: boolean;
+  religiousNoPork: boolean;
+  religiousNoBeef: boolean;
+  religiousNoAlcohol: boolean;
+  religiousHalal: boolean;
+  religiousVegetarian: boolean;
+  religiousVegan: boolean;
+  religiousNoGelatin: boolean;
+  religiousOther: string;
   dueDate: string;
   oneDriveLink: string;
   memo: string;
@@ -29,7 +58,16 @@ type Applicant = {
   reminderNote: string;
 };
 
-type StatusFilter = 'all' | 'pending' | 'passportMissing' | 'enrollmentMissing' | 'completed';
+type StatusFilter =
+  | 'all'
+  | 'pending'
+  | 'passportMissing'
+  | 'enrollmentMissing'
+  | 'photoMissing'
+  | 'pledgeMissing'
+  | 'flightInfoMissing'
+  | 'visaDocumentMissing'
+  | 'completed';
 type DeadlineStatus = 'completed' | 'unset' | 'overdue' | 'soon' | 'ok';
 type CommunicationType = 'メール送信' | 'メール受信' | '電話' | '書類確認' | 'メモ' | 'その他';
 
@@ -44,6 +82,80 @@ type CommunicationDraft = {
   reflectNextAction: boolean;
 };
 
+type DocumentField =
+  | 'passportSubmitted'
+  | 'enrollmentSubmitted'
+  | 'photoSubmitted'
+  | 'pledgeSubmitted'
+  | 'flightInfoSubmitted'
+  | 'visaDocumentSubmitted';
+
+type ConfirmationField =
+  | 'paymentConfirmed'
+  | 'insuranceConfirmed'
+  | 'dietaryRestrictionConfirmed'
+  | 'arrivalInfoConfirmed';
+
+type AllergyField =
+  | 'allergyEgg'
+  | 'allergyMilk'
+  | 'allergyWheat'
+  | 'allergyBuckwheat'
+  | 'allergyPeanut'
+  | 'allergyTreeNuts'
+  | 'allergyShrimpCrab'
+  | 'allergyFish'
+  | 'allergySoy'
+  | 'allergySesame';
+
+type ReligiousDietaryField =
+  | 'religiousNoPork'
+  | 'religiousNoBeef'
+  | 'religiousNoAlcohol'
+  | 'religiousHalal'
+  | 'religiousVegetarian'
+  | 'religiousVegan'
+  | 'religiousNoGelatin';
+
+const documentDefinitions: { key: DocumentField; jp: string; en: string }[] = [
+  { key: 'passportSubmitted', jp: 'パスポートコピー', en: 'Passport copy' },
+  { key: 'enrollmentSubmitted', jp: '在籍証明書', en: 'Certificate of enrollment' },
+  { key: 'photoSubmitted', jp: '顔写真', en: 'Photo' },
+  { key: 'pledgeSubmitted', jp: '誓約書', en: 'Pledge form' },
+  { key: 'flightInfoSubmitted', jp: 'フライト情報', en: 'Flight information' },
+  { key: 'visaDocumentSubmitted', jp: 'ビザ書類（必要な場合）', en: 'Visa document(s), if applicable' }
+];
+
+const confirmationDefinitions: { key: ConfirmationField; label: string }[] = [
+  { key: 'paymentConfirmed', label: '支払確認' },
+  { key: 'insuranceConfirmed', label: '保険確認' },
+  { key: 'dietaryRestrictionConfirmed', label: '食物アレルギー・宗教的食物制限確認' },
+  { key: 'arrivalInfoConfirmed', label: '到着情報確認' }
+];
+
+const allergyOptions: { key: AllergyField; label: string }[] = [
+  { key: 'allergyEgg', label: '卵' },
+  { key: 'allergyMilk', label: '乳・乳製品' },
+  { key: 'allergyWheat', label: '小麦' },
+  { key: 'allergyBuckwheat', label: 'そば' },
+  { key: 'allergyPeanut', label: '落花生・ピーナッツ' },
+  { key: 'allergyTreeNuts', label: 'ナッツ類' },
+  { key: 'allergyShrimpCrab', label: 'えび・かに' },
+  { key: 'allergyFish', label: '魚' },
+  { key: 'allergySoy', label: '大豆' },
+  { key: 'allergySesame', label: 'ごま' }
+];
+
+const religiousDietaryOptions: { key: ReligiousDietaryField; label: string }[] = [
+  { key: 'religiousNoPork', label: '豚肉を避ける' },
+  { key: 'religiousNoBeef', label: '牛肉を避ける' },
+  { key: 'religiousNoAlcohol', label: 'アルコールを避ける' },
+  { key: 'religiousHalal', label: 'ハラール対応が必要' },
+  { key: 'religiousVegetarian', label: 'ベジタリアン' },
+  { key: 'religiousVegan', label: 'ヴィーガン' },
+  { key: 'religiousNoGelatin', label: 'ゼラチンを避ける' }
+];
+
 const communicationTypeOptions: CommunicationType[] = ['メール送信', 'メール受信', '電話', '書類確認', 'メモ', 'その他'];
 
 const statusFilterOptions: { value: StatusFilter; label: string }[] = [
@@ -51,6 +163,10 @@ const statusFilterOptions: { value: StatusFilter; label: string }[] = [
   { value: 'pending', label: '未完了のみ' },
   { value: 'passportMissing', label: 'パスポートコピー未提出' },
   { value: 'enrollmentMissing', label: '在籍証明書未提出' },
+  { value: 'photoMissing', label: '顔写真未提出' },
+  { value: 'pledgeMissing', label: '誓約書未提出' },
+  { value: 'flightInfoMissing', label: 'フライト情報未提出' },
+  { value: 'visaDocumentMissing', label: 'ビザ書類未提出' },
   { value: 'completed', label: '完了のみ' }
 ];
 
@@ -162,6 +278,14 @@ const parseSubmitted = (value: unknown) => {
   return ['提出済み', '済', 'true', 'yes', 'y', '1', 'checked'].includes(text);
 };
 
+const parseAffirmative = (value: unknown) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+
+  const text = String(value ?? '').trim().toLowerCase();
+  return ['あり', '有', '有り', '該当', '提出済み', '済', 'true', 'yes', 'y', '1', 'checked'].includes(text);
+};
+
 const parseReminderCount = (value: unknown) => {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
 
@@ -175,21 +299,55 @@ const parseReminderCount = (value: unknown) => {
 const makeId = (row: Record<string, unknown>, index: number) =>
   `${buildApplicantName(row) || getText(row, ['E-mail', 'メール', 'email']) || 'applicant'}-${index}`;
 
-const getMissingDocuments = (applicant: Applicant) => {
-  const missing: { jp: string; en: string }[] = [];
+const getMissingDocuments = (applicant: Applicant) =>
+  documentDefinitions
+    .filter((definition) => !applicant[definition.key])
+    .map((definition) => ({ jp: definition.jp, en: definition.en }));
 
-  if (!applicant.passportSubmitted) {
-    missing.push({ jp: 'パスポートコピー', en: 'Passport copy' });
-  }
+const getMissingConfirmations = (applicant: Applicant) =>
+  confirmationDefinitions.filter((definition) => !applicant[definition.key]).map((definition) => definition.label);
 
-  if (!applicant.enrollmentSubmitted) {
-    missing.push({ jp: '在籍証明書', en: 'Certificate of enrollment' });
-  }
+const isCompleted = (applicant: Applicant) => documentDefinitions.every((definition) => applicant[definition.key]);
 
-  return missing;
+const getDocumentCompletionLabel = (applicant: Applicant) => {
+  const missingCount = getMissingDocuments(applicant).length;
+  return missingCount ? `${missingCount}件未完了` : '完了';
 };
 
-const isCompleted = (applicant: Applicant) => applicant.passportSubmitted && applicant.enrollmentSubmitted;
+const getConfirmationCompletionLabel = (applicant: Applicant) => {
+  const missingCount = getMissingConfirmations(applicant).length;
+  return missingCount ? `${missingCount}件未確認` : '確認済み';
+};
+
+const getSelectedFoodAllergies = (applicant: Applicant) => {
+  if (!applicant.hasFoodAllergy) return [];
+
+  const selected = allergyOptions.filter((option) => applicant[option.key]).map((option) => option.label);
+  const other = applicant.allergyOther.trim();
+  return other ? [...selected, `その他：${other}`] : selected;
+};
+
+const getSelectedReligiousDietaryRestrictions = (applicant: Applicant) => {
+  if (!applicant.hasReligiousDietaryRestriction) return [];
+
+  const selected = religiousDietaryOptions.filter((option) => applicant[option.key]).map((option) => option.label);
+  const other = applicant.religiousOther.trim();
+  return other ? [...selected, `その他：${other}`] : selected;
+};
+
+const getFoodAllergySummary = (applicant: Applicant) => {
+  if (!applicant.hasFoodAllergy) return applicant.dietaryRestrictionConfirmed ? 'なし' : '未確認';
+
+  const selected = getSelectedFoodAllergies(applicant);
+  return selected.length ? selected.join('、') : 'あり（詳細未入力）';
+};
+
+const getReligiousDietarySummary = (applicant: Applicant) => {
+  if (!applicant.hasReligiousDietaryRestriction) return applicant.dietaryRestrictionConfirmed ? 'なし' : '未確認';
+
+  const selected = getSelectedReligiousDietaryRestrictions(applicant);
+  return selected.length ? selected.join('、') : 'あり（詳細未入力）';
+};
 
 const getDateOnly = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
@@ -287,6 +445,16 @@ const createNextActionSuggestion = (applicant: Applicant) => {
   const missingItems = getMissingDocuments(applicant).map((item) => item.jp);
 
   if (!missingItems.length) {
+    const missingConfirmations = getMissingConfirmations(applicant);
+
+    if (missingConfirmations.length) {
+      return `書類は完了しています。次に、${missingConfirmations.join('、')}を確認してください。`;
+    }
+
+    if (applicant.hasFoodAllergy || applicant.hasReligiousDietaryRestriction) {
+      return `書類は完了しています。食事制限（アレルギー：${getFoodAllergySummary(applicant)}／宗教的制限：${getReligiousDietarySummary(applicant)}）を関係者へ共有してください。`;
+    }
+
     if (applicant.specialRequest.trim()) {
       return '書類は完了しています。特別リクエストの内容を確認し、必要に応じて担当者から回答してください。';
     }
@@ -394,6 +562,35 @@ const createApplicantFromRow = (row: Record<string, unknown>, index: number): Ap
   ]),
   passportSubmitted: parseSubmitted(getCell(row, ['パスポートコピー', 'パスポートコピー提出', 'passportSubmitted'])),
   enrollmentSubmitted: parseSubmitted(getCell(row, ['在籍証明書', '在籍証明書提出', 'enrollmentSubmitted'])),
+  photoSubmitted: parseSubmitted(getCell(row, ['顔写真', '顔写真提出', 'photoSubmitted'])),
+  pledgeSubmitted: parseSubmitted(getCell(row, ['誓約書', '誓約書提出', 'pledgeSubmitted'])),
+  flightInfoSubmitted: parseSubmitted(getCell(row, ['フライト情報', 'フライト情報提出', 'flightInfoSubmitted'])),
+  visaDocumentSubmitted: parseSubmitted(getCell(row, ['ビザ書類', 'ビザ書類提出', 'visaDocumentSubmitted'])),
+  paymentConfirmed: parseSubmitted(getCell(row, ['支払確認', 'paymentConfirmed'])),
+  insuranceConfirmed: parseSubmitted(getCell(row, ['保険確認', 'insuranceConfirmed'])),
+  dietaryRestrictionConfirmed: parseSubmitted(getCell(row, ['食事制限確認', '食物アレルギー・宗教的食物制限確認', 'dietaryRestrictionConfirmed'])),
+  arrivalInfoConfirmed: parseSubmitted(getCell(row, ['到着情報確認', 'arrivalInfoConfirmed'])),
+  hasFoodAllergy: parseAffirmative(getCell(row, ['食物アレルギー有無', '食物アレルギーあり', 'hasFoodAllergy'])),
+  allergyEgg: parseAffirmative(getCell(row, ['アレルギー_卵', '卵アレルギー', 'allergyEgg'])),
+  allergyMilk: parseAffirmative(getCell(row, ['アレルギー_乳', '乳アレルギー', 'allergyMilk'])),
+  allergyWheat: parseAffirmative(getCell(row, ['アレルギー_小麦', '小麦アレルギー', 'allergyWheat'])),
+  allergyBuckwheat: parseAffirmative(getCell(row, ['アレルギー_そば', 'そばアレルギー', 'allergyBuckwheat'])),
+  allergyPeanut: parseAffirmative(getCell(row, ['アレルギー_落花生', 'ピーナッツアレルギー', 'allergyPeanut'])),
+  allergyTreeNuts: parseAffirmative(getCell(row, ['アレルギー_ナッツ類', 'ナッツ類アレルギー', 'allergyTreeNuts'])),
+  allergyShrimpCrab: parseAffirmative(getCell(row, ['アレルギー_えびかに', 'えび・かにアレルギー', 'allergyShrimpCrab'])),
+  allergyFish: parseAffirmative(getCell(row, ['アレルギー_魚', '魚アレルギー', 'allergyFish'])),
+  allergySoy: parseAffirmative(getCell(row, ['アレルギー_大豆', '大豆アレルギー', 'allergySoy'])),
+  allergySesame: parseAffirmative(getCell(row, ['アレルギー_ごま', 'ごまアレルギー', 'allergySesame'])),
+  allergyOther: getText(row, ['アレルギー_その他', '食物アレルギーその他', 'allergyOther']),
+  hasReligiousDietaryRestriction: parseAffirmative(getCell(row, ['宗教的食物制限有無', '宗教的食物制限あり', 'hasReligiousDietaryRestriction'])),
+  religiousNoPork: parseAffirmative(getCell(row, ['宗教食_豚肉不可', '豚肉を避ける', 'religiousNoPork'])),
+  religiousNoBeef: parseAffirmative(getCell(row, ['宗教食_牛肉不可', '牛肉を避ける', 'religiousNoBeef'])),
+  religiousNoAlcohol: parseAffirmative(getCell(row, ['宗教食_アルコール不可', 'アルコールを避ける', 'religiousNoAlcohol'])),
+  religiousHalal: parseAffirmative(getCell(row, ['宗教食_ハラール', 'ハラール対応', 'religiousHalal'])),
+  religiousVegetarian: parseAffirmative(getCell(row, ['宗教食_ベジタリアン', 'ベジタリアン', 'religiousVegetarian'])),
+  religiousVegan: parseAffirmative(getCell(row, ['宗教食_ヴィーガン', 'ヴィーガン', 'religiousVegan'])),
+  religiousNoGelatin: parseAffirmative(getCell(row, ['宗教食_ゼラチン不可', 'ゼラチンを避ける', 'religiousNoGelatin'])),
+  religiousOther: getText(row, ['宗教食_その他', '宗教的食物制限その他', 'religiousOther']),
   dueDate: formatInputDate(getCell(row, ['提出期限', '期日', 'dueDate'])),
   oneDriveLink: getText(row, ['OneDriveリンク', 'oneDriveLink']),
   memo: getText(row, ['メモ', 'memo']),
@@ -576,6 +773,15 @@ function App() {
     [applicants]
   );
   const completedCount = useMemo(() => applicants.filter(isCompleted).length, [applicants]);
+  const confirmationPendingCount = useMemo(
+    () => applicants.filter((applicant) => getMissingConfirmations(applicant).length > 0).length,
+    [applicants]
+  );
+
+  const dietaryAttentionApplicants = useMemo(
+    () => applicants.filter((applicant) => applicant.hasFoodAllergy || applicant.hasReligiousDietaryRestriction),
+    [applicants]
+  );
 
   const filteredApplicants = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
@@ -595,6 +801,14 @@ function App() {
           return !a.passportSubmitted;
         case 'enrollmentMissing':
           return !a.enrollmentSubmitted;
+        case 'photoMissing':
+          return !a.photoSubmitted;
+        case 'pledgeMissing':
+          return !a.pledgeSubmitted;
+        case 'flightInfoMissing':
+          return !a.flightInfoSubmitted;
+        case 'visaDocumentMissing':
+          return !a.visaDocumentSubmitted;
         case 'completed':
           return a.passportSubmitted && a.enrollmentSubmitted;
         default:
@@ -672,6 +886,20 @@ function App() {
       国籍: a.nationality,
       パスポートコピー: a.passportSubmitted ? '提出済み' : '未提出',
       在籍証明書: a.enrollmentSubmitted ? '提出済み' : '未提出',
+      顔写真: a.photoSubmitted ? '提出済み' : '未提出',
+      誓約書: a.pledgeSubmitted ? '提出済み' : '未提出',
+      フライト情報: a.flightInfoSubmitted ? '提出済み' : '未提出',
+      ビザ書類: a.visaDocumentSubmitted ? '提出済み' : '未提出',
+      書類完了状況: getDocumentCompletionLabel(a),
+      支払確認: a.paymentConfirmed ? '済' : '未',
+      保険確認: a.insuranceConfirmed ? '済' : '未',
+      食物アレルギー宗教的食物制限確認: a.dietaryRestrictionConfirmed ? '済' : '未',
+      到着情報確認: a.arrivalInfoConfirmed ? '済' : '未',
+      確認事項状況: getConfirmationCompletionLabel(a),
+      食物アレルギー有無: a.hasFoodAllergy ? 'あり' : 'なし',
+      食物アレルギー内容: getFoodAllergySummary(a),
+      宗教的食物制限有無: a.hasReligiousDietaryRestriction ? 'あり' : 'なし',
+      宗教的食物制限内容: getReligiousDietarySummary(a),
       提出期限: a.dueDate,
       期限状況: getDeadlineLabel(a),
       OneDriveリンク: a.oneDriveLink,
@@ -698,6 +926,7 @@ function App() {
       { 項目: '出力作業者', 内容: exportOperatorName || '未入力' },
       { 項目: '応募者数', 内容: `${applicants.length}名` },
       { 項目: '未完了', 内容: `${pendingCount}名` },
+      { 項目: '確認事項未完了', 内容: `${confirmationPendingCount}名` },
       { 項目: '期限超過', 内容: `${overdueCount}名` },
       { 項目: '期限間近', 内容: `${soonCount}名` },
       { 項目: '期限未設定', 内容: `${unsetDueDateCount}名` },
@@ -895,6 +1124,14 @@ function App() {
             <strong>{applicant.nationality || '未入力'}</strong>
           </div>
           <div>
+            <span>食物アレルギー</span>
+            <strong>{getFoodAllergySummary(applicant)}</strong>
+          </div>
+          <div>
+            <span>宗教的食物制限</span>
+            <strong>{getReligiousDietarySummary(applicant)}</strong>
+          </div>
+          <div>
             <span>提出期限</span>
             <strong>{applicant.dueDate || '未設定'}</strong>
           </div>
@@ -917,24 +1154,19 @@ function App() {
             <section className="crm-section-card">
               <h3>提出状況</h3>
               <div className="crm-status-board">
-                <label className="crm-check-card">
-                  <input
-                    type="checkbox"
-                    checked={applicant.passportSubmitted}
-                    onChange={(e) => updateApplicant(applicant.id, { passportSubmitted: e.target.checked })}
-                  />
-                  <span>パスポートコピー</span>
-                  <strong>{applicant.passportSubmitted ? '提出済み' : '未提出'}</strong>
-                </label>
-                <label className="crm-check-card">
-                  <input
-                    type="checkbox"
-                    checked={applicant.enrollmentSubmitted}
-                    onChange={(e) => updateApplicant(applicant.id, { enrollmentSubmitted: e.target.checked })}
-                  />
-                  <span>在籍証明書</span>
-                  <strong>{applicant.enrollmentSubmitted ? '提出済み' : '未提出'}</strong>
-                </label>
+                {documentDefinitions.map((definition) => (
+                  <label key={definition.key} className="crm-check-card">
+                    <input
+                      type="checkbox"
+                      checked={applicant[definition.key]}
+                      onChange={(e) =>
+                        updateApplicant(applicant.id, { [definition.key]: e.target.checked } as Partial<Applicant>)
+                      }
+                    />
+                    <span>{definition.jp}</span>
+                    <strong>{applicant[definition.key] ? '提出済み' : '未提出'}</strong>
+                  </label>
+                ))}
                 <label>
                   提出期限
                   <input
@@ -952,6 +1184,111 @@ function App() {
                     onChange={(e) => updateApplicant(applicant.id, { oneDriveLink: e.target.value })}
                   />
                 </label>
+              </div>
+            </section>
+
+            <section className="crm-section-card">
+              <h3>確認事項・食事制限</h3>
+              <div className="crm-status-board">
+                {confirmationDefinitions.map((definition) => (
+                  <label key={definition.key} className="crm-check-card">
+                    <input
+                      type="checkbox"
+                      checked={applicant[definition.key]}
+                      onChange={(e) =>
+                        updateApplicant(applicant.id, { [definition.key]: e.target.checked } as Partial<Applicant>)
+                      }
+                    />
+                    <span>{definition.label}</span>
+                    <strong>{applicant[definition.key] ? '済' : '未確認'}</strong>
+                  </label>
+                ))}
+              </div>
+
+              <div className="dietary-detail-grid">
+                <section className="dietary-detail-card">
+                  <h4>食物アレルギー</h4>
+                  <label className="inline-check">
+                    <input
+                      type="checkbox"
+                      checked={applicant.hasFoodAllergy}
+                      onChange={(e) => updateApplicant(applicant.id, { hasFoodAllergy: e.target.checked })}
+                    />
+                    <span>食物アレルギーあり</span>
+                  </label>
+                  {applicant.hasFoodAllergy ? (
+                    <>
+                      <div className="checkbox-group">
+                        {allergyOptions.map((option) => (
+                          <label key={option.key} className="inline-check">
+                            <input
+                              type="checkbox"
+                              checked={applicant[option.key]}
+                              onChange={(e) =>
+                                updateApplicant(applicant.id, { [option.key]: e.target.checked } as Partial<Applicant>)
+                              }
+                            />
+                            <span>{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <label>
+                        その他・詳細
+                        <textarea
+                          rows={3}
+                          placeholder="例：キウイ、マンゴー、重度の場合の注意点など"
+                          value={applicant.allergyOther}
+                          onChange={(e) => updateApplicant(applicant.id, { allergyOther: e.target.value })}
+                        />
+                      </label>
+                    </>
+                  ) : (
+                    <p className="empty-note">なしの場合はチェックを外し、確認後に「食物アレルギー・宗教的食物制限確認」を済にしてください。</p>
+                  )}
+                </section>
+
+                <section className="dietary-detail-card">
+                  <h4>宗教的な食物制限</h4>
+                  <label className="inline-check">
+                    <input
+                      type="checkbox"
+                      checked={applicant.hasReligiousDietaryRestriction}
+                      onChange={(e) =>
+                        updateApplicant(applicant.id, { hasReligiousDietaryRestriction: e.target.checked })
+                      }
+                    />
+                    <span>宗教的に避ける食べものあり</span>
+                  </label>
+                  {applicant.hasReligiousDietaryRestriction ? (
+                    <>
+                      <div className="checkbox-group">
+                        {religiousDietaryOptions.map((option) => (
+                          <label key={option.key} className="inline-check">
+                            <input
+                              type="checkbox"
+                              checked={applicant[option.key]}
+                              onChange={(e) =>
+                                updateApplicant(applicant.id, { [option.key]: e.target.checked } as Partial<Applicant>)
+                              }
+                            />
+                            <span>{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <label>
+                        その他・詳細
+                        <textarea
+                          rows={3}
+                          placeholder="例：調味料のアルコール不可、同じ調理器具不可など"
+                          value={applicant.religiousOther}
+                          onChange={(e) => updateApplicant(applicant.id, { religiousOther: e.target.value })}
+                        />
+                      </label>
+                    </>
+                  ) : (
+                    <p className="empty-note">なしの場合はチェックを外し、確認後に「食物アレルギー・宗教的食物制限確認」を済にしてください。</p>
+                  )}
+                </section>
               </div>
             </section>
 
@@ -1315,6 +1652,10 @@ function App() {
             <span>未完了</span>
             <strong>{pendingCount}名</strong>
           </div>
+          <div className="summary-card summary-unset">
+            <span>確認事項未完了</span>
+            <strong>{confirmationPendingCount}名</strong>
+          </div>
           <div className="summary-card summary-overdue">
             <span>期限超過</span>
             <strong>{overdueCount}名</strong>
@@ -1330,6 +1671,27 @@ function App() {
           <div className="summary-card summary-completed">
             <span>完了</span>
             <strong>{completedCount}名</strong>
+          </div>
+        </section>
+      )}
+
+      {!!applicants.length && dietaryAttentionApplicants.length > 0 && (
+        <section className="dietary-summary-panel">
+          <h2>食物アレルギー・宗教的食物制限 確認リスト</h2>
+          <p>食事手配や訪問先共有が必要になりそうな応募者です。</p>
+          <div className="dietary-list">
+            {dietaryAttentionApplicants.map((applicant) => (
+              <button
+                key={applicant.id}
+                type="button"
+                className="dietary-list-item"
+                onClick={() => openApplicantPage(applicant.id)}
+              >
+                <strong>{applicant.name || '氏名未入力'}</strong>
+                <span>アレルギー：{getFoodAllergySummary(applicant)}</span>
+                <span>宗教的制限：{getReligiousDietarySummary(applicant)}</span>
+              </button>
+            ))}
           </div>
         </section>
       )}
@@ -1479,6 +1841,9 @@ function App() {
                 <th>国籍</th>
                 <th>パスポートコピー</th>
                 <th>在籍証明書</th>
+                <th>追加書類</th>
+                <th>確認事項</th>
+                <th>食事制限</th>
                 <th>提出期限</th>
                 <th>期限状況</th>
                 <th>OneDriveリンク</th>
@@ -1514,6 +1879,13 @@ function App() {
                         checked={a.enrollmentSubmitted}
                         onChange={(e) => updateApplicant(a.id, { enrollmentSubmitted: e.target.checked })}
                       />
+                    </td>
+                    <td>{getDocumentCompletionLabel(a)}</td>
+                    <td>{getConfirmationCompletionLabel(a)}</td>
+                    <td>
+                      アレルギー：{getFoodAllergySummary(a)}
+                      <br />
+                      宗教食：{getReligiousDietarySummary(a)}
                     </td>
                     <td>
                       <input
@@ -1554,7 +1926,7 @@ function App() {
               })}
               {!filteredApplicants.length && (
                 <tr>
-                  <td colSpan={12}>該当する応募者はいません。</td>
+                  <td colSpan={15}>該当する応募者はいません。</td>
                 </tr>
               )}
             </tbody>
