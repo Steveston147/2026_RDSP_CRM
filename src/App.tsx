@@ -34,6 +34,13 @@ const PROGRESS_COLUMNS = {
   oneDriveLink: 'OneDriveリンク'
 } as const;
 
+const PROGRESS_COLUMN_ALIASES = {
+  passport: [PROGRESS_COLUMNS.passport, 'パスポートコピー'],
+  enrollment: [PROGRESS_COLUMNS.enrollment, '在籍証明書'],
+  dueDate: [PROGRESS_COLUMNS.dueDate, '期日'],
+  oneDriveLink: [PROGRESS_COLUMNS.oneDriveLink, 'OneDrive リンク']
+} as const;
+
 const toString = (value: unknown): string => (value == null ? '' : String(value).trim());
 
 const getValue = (row: Record<string, unknown>, keys: string[]): unknown => {
@@ -109,11 +116,10 @@ function App() {
 
     const firstRowKeys = Object.keys(rows[0]);
     const isProgressSheet =
-      firstRowKeys.includes(PROGRESS_COLUMNS.passport) ||
-      firstRowKeys.includes(PROGRESS_COLUMNS.enrollment) ||
-      firstRowKeys.includes(PROGRESS_COLUMNS.oneDriveLink) ||
-      firstRowKeys.includes(PROGRESS_COLUMNS.dueDate) ||
-      firstRowKeys.includes('期日');
+      PROGRESS_COLUMN_ALIASES.passport.some((key) => firstRowKeys.includes(key)) ||
+      PROGRESS_COLUMN_ALIASES.enrollment.some((key) => firstRowKeys.includes(key)) ||
+      PROGRESS_COLUMN_ALIASES.oneDriveLink.some((key) => firstRowKeys.includes(key)) ||
+      PROGRESS_COLUMN_ALIASES.dueDate.some((key) => firstRowKeys.includes(key));
 
     const next = rows.map((row, index) => {
       if (isProgressSheet) {
@@ -124,10 +130,10 @@ function App() {
           email: toString(getValue(row, [PROGRESS_COLUMNS.email, FORM_COLUMNS.answerEmail, 'email'])),
           birthDate: formatBirthDate(getValue(row, [PROGRESS_COLUMNS.birthDate, FORM_COLUMNS.dateOfBirth, 'birthDate'])),
           nationality: toString(getValue(row, [PROGRESS_COLUMNS.nationality, FORM_COLUMNS.nationality, 'nationality'])),
-          passportSubmitted: toBool(getValue(row, [PROGRESS_COLUMNS.passport, 'passportSubmitted'])),
-          enrollmentSubmitted: toBool(getValue(row, [PROGRESS_COLUMNS.enrollment, 'enrollmentSubmitted'])),
-          dueDate: formatDueDate(getValue(row, [PROGRESS_COLUMNS.dueDate, '期日', 'dueDate'])),
-          oneDriveLink: toString(getValue(row, [PROGRESS_COLUMNS.oneDriveLink, 'oneDriveLink']))
+          passportSubmitted: toBool(getValue(row, [...PROGRESS_COLUMN_ALIASES.passport, 'passportSubmitted'])),
+          enrollmentSubmitted: toBool(getValue(row, [...PROGRESS_COLUMN_ALIASES.enrollment, 'enrollmentSubmitted'])),
+          dueDate: formatDueDate(getValue(row, [...PROGRESS_COLUMN_ALIASES.dueDate, 'dueDate'])),
+          oneDriveLink: toString(getValue(row, [...PROGRESS_COLUMN_ALIASES.oneDriveLink, 'oneDriveLink']))
         };
       }
 
