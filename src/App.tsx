@@ -92,11 +92,57 @@ const parseSubmitted = (value: unknown) => {
 const makeId = (row: Record<string, unknown>, index: number) =>
   `${buildApplicantName(row) || getText(row, ['E-mail', 'メール', 'email']) || 'applicant'}-${index}`;
 
-const createNextActionSuggestion = (applicant: Applicant) => {
-  const missingItems: string[] = [];
+const getMissingDocuments = (applicant: Applicant) => {
+  const missing: { jp: string; en: string }[] = [];
 
-  if (!applicant.passportSubmitted) missingItems.push('パスポートコピー');
-  if (!applicant.enrollmentSubmitted) missingItems.push('在籍証明書');
+  if (!applicant.passportSubmitted) {
+    missing.push({ jp: 'パスポートコピー', en: 'Passport copy' });
+  }
+
+  if (!applicant.enrollmentSubmitted) {
+    missing.push({ jp: '在籍証明書', en: 'Certificate of enrollment' });
+  }
+
+  return missing;
+};
+
+const getFirstNameForEmail = (name: string) => {
+  const first = name.trim().split(/\s+/)[0];
+  return first || name || 'there';
+};
+
+const formatEnglishDate = (value: string) => {
+  if (!value) return '';
+
+  const match = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/) || value.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+  if (!match) return value;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ];
+
+  if (!year || month < 1 || month > 12 || day < 1 || day > 31) return value;
+
+  return `${monthNames[month - 1]} ${day}, ${year}`;
+};
+
+const createNextActionSuggestion = (applicant: Applicant) => {
+  const missingItems = getMissingDocuments(applicant).map((item) => item.jp);
 
   if (!missingItems.length) {
     if (applicant.specialRequest.trim()) {
@@ -116,22 +162,71 @@ const createNextActionSuggestion = (applicant: Applicant) => {
   return `${requestText}が未提出です。まずOneDriveリンクを設定し、${dueDateText}とあわせて提出依頼メールを送ってください。`;
 };
 
+const createReminderEmail = (applicant: Applicant) => {
+  const missingDocuments = getMissingDocuments(applicant);
+
+  if (!missingDocuments.length) {
+    return `Dear ${getFirstNameForEmail(applicant.name)},
+
+Thank you very much for submitting the required documents.
+
+At this moment, we have confirmed the following documents:
+
+- Passport copy
+- Certificate of enrollment
+
+If we need any further information, we will contact you again.
+
+Best regards,
+Ritsumeikan Study Abroad Center`;
+  }
+
+  const missingList = missingDocuments.map((item) => `- ${item.en}`).join('\n');
+  const dueDateLine = applicant.dueDate
+    ? `Please upload them by ${formatEnglishDate(applicant.dueDate)}.`
+    : 'Please upload them as soon as possible.';
+  const oneDriveLine = applicant.oneDriveLink.trim()
+    ? `\n\nUpload link:\n${applicant.oneDriveLink.trim()}`
+    : '\n\nWe will share the upload link separately if needed.';
+
+  return `Dear ${getFirstNameForEmail(applicant.name)},
+
+This is a gentle reminder that we have not yet received the following document(s):
+
+${missingList}
+
+${dueDateLine}${oneDriveLine}
+
+If you have already submitted them, please kindly ignore this message.
+
+Best regards,
+Ritsumeikan Study Abroad Center`;
+};
+
 function App() {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [dueDate, setDueDate] = useState('');
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedApplicantId, setSelectedApplicantId] = useState('');
+  const [reminderApplicantId, setReminderApplicantId] = useState('');
 
   const selectedApplicant = useMemo(
     () => applicants.find((applicant) => applicant.id === selectedApplicantId) ?? null,
     [applicants, selectedApplicantId]
   );
 
-  const pendingCount = useMemo(
-    () => applicants.filter((a) => !a.passportSubmitted || !a.enrollmentSubmitted).length,
+  const reminderApplicant = useMemo(
+    () => applicants.find((applicant) => applicant.id === reminderApplicantId) ?? null,
+    [applicants, reminderApplicantId]
+  );
+
+  const pendingApplicants = useMemo(
+    () => applicants.filter((a) => !a.passportSubmitted || !a.enrollmentSubmitted),
     [applicants]
   );
+
+  const pendingCount = pendingApplicants.length;
 
   const filteredApplicants = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
@@ -195,6 +290,7 @@ function App() {
 
     setApplicants(next);
     setSelectedApplicantId(next[0]?.id ?? '');
+    setReminderApplicantId(next.find((a) => !a.passportSubmitted || !a.enrollmentSubmitted)?.id ?? '');
     event.target.value = '';
   };
 
@@ -238,6 +334,21 @@ function App() {
     updateApplicant(selectedApplicant.id, {
       nextAction: createNextActionSuggestion(selectedApplicant)
     });
+  };
+
+  const openReminderForApplicant = (applicantId: string) => {
+    setReminderApplicantId(applicantId);
+    setSelectedApplicantId(applicantId);
+  };
+
+  const copyReminderEmail = async () => {
+    if (!reminderApplicant) return;
+
+    const text = createReminderEmail(reminderApplicant);
+
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    }
   };
 
   return (
@@ -287,6 +398,108 @@ function App() {
 
       <p>未完了：{pendingCount}名 / 全体：{applicants.length}名</p>
       <p>表示中：{filteredApplicants.length}名</p>
+
+      {!!applicants.length && (
+        <section
+          className="pending-reminders"
+          style={{
+            margin: '18px 0',
+            padding: '16px',
+            border: '1px solid #d0d7de',
+            borderRadius: '12px',
+            background: '#fff'
+          }}
+        >
+          <h2>未提出者リスト・リマインド文面</h2>
+
+          {pendingApplicants.length ? (
+            <>
+              <p>未提出者：{pendingApplicants.length}名</p>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(260px, 360px) 1fr',
+                  gap: '16px',
+                  alignItems: 'start'
+                }}
+              >
+                <div
+                  style={{
+                    maxHeight: '360px',
+                    overflow: 'auto',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px'
+                  }}
+                >
+                  {pendingApplicants.map((applicant) => {
+                    const missingItems = getMissingDocuments(applicant).map((item) => item.jp);
+
+                    return (
+                      <div
+                        key={applicant.id}
+                        style={{
+                          padding: '10px',
+                          borderBottom: '1px solid #e5e7eb',
+                          background: reminderApplicantId === applicant.id ? '#f0f7ff' : '#fff'
+                        }}
+                      >
+                        <strong>{applicant.name || '氏名未入力'}</strong>
+                        <p style={{ margin: '6px 0' }}>未提出：{missingItems.join('、')}</p>
+                        <p style={{ margin: '6px 0', fontSize: '13px' }}>
+                          期限：{applicant.dueDate || '未設定'} ／ OneDrive：
+                          {applicant.oneDriveLink.trim() ? '設定済み' : '未設定'}
+                        </p>
+                        <button type="button" onClick={() => openReminderForApplicant(applicant.id)}>
+                          文面を表示
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div>
+                  {reminderApplicant ? (
+                    <>
+                      <h3 style={{ marginTop: 0 }}>{reminderApplicant.name} 宛リマインド文面</h3>
+                      <textarea
+                        readOnly
+                        rows={14}
+                        value={createReminderEmail(reminderApplicant)}
+                        style={{
+                          width: '100%',
+                          minHeight: '260px',
+                          padding: '10px',
+                          lineHeight: '1.5'
+                        }}
+                      />
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                        <button type="button" onClick={copyReminderEmail}>
+                          文面をコピー
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateApplicant(reminderApplicant.id, {
+                              nextAction: createNextActionSuggestion(reminderApplicant)
+                            })
+                          }
+                        >
+                          次にやることへ反映
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p>左の未提出者から文面を表示する応募者を選んでください。</p>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <p>未提出者はいません。全員の書類提出が完了しています。</p>
+          )}
+        </section>
+      )}
 
       <table>
         <thead>
@@ -470,4 +683,4 @@ function App() {
   );
 }
 
-export default App;
+export default App
