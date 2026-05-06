@@ -2484,3 +2484,250 @@ body {
     overflow: hidden !important;
   }
 }
+
+/* Table list layout refinement - balanced column widths and two-line cells */
+.table-ui-note {
+  display: none;
+}
+
+main.container > table {
+  table-layout: fixed;
+  min-width: 1840px;
+  width: 100%;
+  border: 1px solid #c9d1d9;
+  background: #fff;
+}
+
+main.container > table th,
+main.container > table td {
+  padding: 10px 8px;
+  border-color: #c9d1d9;
+  font-size: 13.5px;
+  line-height: 1.35;
+  vertical-align: middle;
+}
+
+main.container > table th {
+  background: #eef1f4;
+  color: #1f2328;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+main.container > table tbody tr {
+  min-height: 58px;
+}
+
+main.container > table tbody tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+main.container > table tbody tr:hover {
+  background: #f3f7fb;
+}
+
+/* Column widths: keep name and email readable on one line, reduce blank name space. */
+main.container > table th:nth-child(1),
+main.container > table td:nth-child(1) {
+  width: 42px;
+  text-align: center;
+}
+
+main.container > table th:nth-child(2),
+main.container > table td:nth-child(2) {
+  width: 185px;
+}
+
+main.container > table th:nth-child(3),
+main.container > table td:nth-child(3) {
+  width: 270px;
+}
+
+main.container > table th:nth-child(4),
+main.container > table td:nth-child(4) {
+  width: 92px;
+}
+
+main.container > table th:nth-child(5),
+main.container > table td:nth-child(5) {
+  width: 108px;
+}
+
+main.container > table th:nth-child(6),
+main.container > table td:nth-child(6) {
+  width: 102px;
+  text-align: center;
+}
+
+main.container > table th:nth-child(7),
+main.container > table td:nth-child(7),
+main.container > table th:nth-child(8),
+main.container > table td:nth-child(8) {
+  width: 112px;
+  text-align: center;
+}
+
+main.container > table th:nth-child(9),
+main.container > table td:nth-child(9),
+main.container > table th:nth-child(10),
+main.container > table td:nth-child(10) {
+  width: 92px;
+  text-align: center;
+}
+
+main.container > table th:nth-child(11),
+main.container > table td:nth-child(11) {
+  width: 118px;
+}
+
+main.container > table th:nth-child(12),
+main.container > table td:nth-child(12) {
+  width: 135px;
+}
+
+main.container > table th:nth-child(13),
+main.container > table td:nth-child(13) {
+  width: 104px;
+  text-align: center;
+}
+
+main.container > table th:nth-child(14),
+main.container > table td:nth-child(14) {
+  width: 170px;
+}
+
+main.container > table th:nth-child(15),
+main.container > table td:nth-child(15) {
+  width: 96px;
+  text-align: center;
+}
+
+main.container > table th:nth-child(16),
+main.container > table td:nth-child(16) {
+  width: 92px;
+  text-align: center;
+}
+
+/* Name and email: single line. */
+main.container > table td:nth-child(2),
+main.container > table td:nth-child(3) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+main.container > table td:nth-child(2) .applicant-name-button {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  color: #0b5cad;
+  font-size: 13.5px;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Other text cells: two-line rhythm, smaller only where needed. */
+main.container > table td:nth-child(4),
+main.container > table td:nth-child(5),
+main.container > table td:nth-child(9),
+main.container > table td:nth-child(10),
+main.container > table td:nth-child(11),
+main.container > table td:nth-child(15) {
+  display: table-cell;
+  overflow: hidden;
+  font-size: 12.7px;
+  line-height: 1.28;
+}
+
+main.container > table td:nth-child(9),
+main.container > table td:nth-child(10),
+main.container > table td:nth-child(11),
+main.container > table td:nth-child(15) {
+  max-height: 2.7em;
+}
+
+main.container > table td:nth-child(11) {
+  font-size: 11.8px;
+  line-height: 1.2;
+}
+
+main.container > table td:nth-child(11) br,
+main.container > table td:nth-child(15) br {
+  display: block;
+  content: '';
+}
+
+/* Inputs inside table should fit the column instead of creating useless blank width. */
+main.container > table td input[type='date'],
+main.container > table td input[type='url'] {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 7px;
+  font-size: 12.5px;
+}
+
+main.container > table td input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+}
+
+main.container > table td .visa-status-pill,
+main.container > table td .deadline-badge {
+  max-width: 100%;
+  padding: 4px 7px;
+  font-size: 11.4px;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+main.container > table td button:not(.applicant-name-button) {
+  padding: 6px 8px;
+  font-size: 12.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (max-width: 1600px) {
+  main.container > table {
+    min-width: 1760px;
+  }
+
+  main.container > table th,
+  main.container > table td {
+    padding: 9px 7px;
+    font-size: 13px;
+  }
+
+  main.container > table th:nth-child(2),
+  main.container > table td:nth-child(2) {
+    width: 172px;
+  }
+
+  main.container > table th:nth-child(3),
+  main.container > table td:nth-child(3) {
+    width: 250px;
+  }
+}
+
+@media print {
+  body[data-print-mode='list'] table {
+    table-layout: fixed !important;
+    min-width: auto !important;
+  }
+
+  body[data-print-mode='list'] th,
+  body[data-print-mode='list'] td {
+    padding: 2px 3px !important;
+    font-size: 7.5px !important;
+    line-height: 1.15 !important;
+  }
+
+  body[data-print-mode='list'] td:nth-child(2),
+  body[data-print-mode='list'] td:nth-child(3) {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
