@@ -1,24 +1,237 @@
+/* FILE: src/styles.css */
+/* PATH: src/styles.css */
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
+  background: #f7f8fb;
+  color: #222;
 }
+
 .container {
-  padding: 16px;
+  padding: 20px;
+  max-width: 1800px;
+  margin: 0 auto;
 }
+
+h1 {
+  margin: 0 0 12px;
+  font-size: 28px;
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+
+p {
+  line-height: 1.5;
+}
+
 .controls {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  align-items: center;
+  margin: 16px 0;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
 }
+
+.controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+input,
+select,
+button,
+textarea {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+input[type='search'],
+input[type='text'],
+input[type='date'],
+input[type='url'],
+select,
+textarea {
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: #fff;
+}
+
+input[type='search'] {
+  width: 180px;
+}
+
+input[type='url'] {
+  width: 100%;
+  min-width: 160px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+button {
+  border: 1px solid #999;
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: #fff;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+button:disabled {
+  color: #aaa;
+  border-color: #ddd;
+  background: #eee;
+  cursor: not-allowed;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
+  background: #fff;
+  margin-top: 14px;
 }
-th, td {
+
+th,
+td {
   border: 1px solid #ccc;
   padding: 8px;
+  vertical-align: middle;
 }
-input[type='url'] {
-  width: 100%;
+
+th {
+  background: #f1f3f6;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+td {
+  font-size: 14px;
+}
+
+tbody tr:hover {
+  background: #fafcff;
+}
+
+td button {
+  white-space: nowrap;
+}
+
+.applicant-detail {
+  margin-top: 24px !important;
+  padding: 20px !important;
+  border: 1px solid #d0d7de !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.applicant-detail h2 {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 10px;
+}
+
+.applicant-detail p {
+  margin: 8px 0;
+}
+
+.applicant-detail button {
+  margin-top: 8px;
+  background: #f6f8fa;
+}
+
+.applicant-detail > div {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 16px !important;
+  margin-top: 18px !important;
+}
+
+.applicant-detail label {
+  display: block;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.applicant-detail input[type='text'],
+.applicant-detail input[type='date'],
+.applicant-detail textarea {
+  display: block;
+  width: 100% !important;
+  margin-top: 6px;
+  font-weight: 400;
+}
+
+.applicant-detail textarea {
+  min-height: 92px;
+}
+
+.applicant-detail label:nth-of-type(6),
+.applicant-detail label:nth-of-type(7),
+.applicant-detail label:nth-of-type(8) {
+  grid-column: 1 / -1;
+}
+
+.applicant-detail label:nth-of-type(6) textarea {
+  min-height: 160px;
+}
+
+.applicant-detail label:nth-of-type(7) textarea,
+.applicant-detail label:nth-of-type(8) textarea {
+  min-height: 120px;
+}
+
+@media (max-width: 900px) {
+  .container {
+    padding: 12px;
+  }
+
+  .controls {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .controls label {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  input[type='search'],
+  input[type='text'],
+  input[type='date'],
+  input[type='url'],
+  select {
+    width: 100%;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .applicant-detail > div {
+    grid-template-columns: 1fr;
+  }
 }
