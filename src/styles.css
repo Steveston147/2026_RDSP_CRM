@@ -2283,3 +2283,293 @@ textarea {
     display: none !important;
   }
 }
+
+/* Applicant name list + main table responsive width tuning - keep names/emails one line, other cells within two lines */
+.applicant-name-list-panel {
+  margin: 16px 0 12px;
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.applicant-name-list-header {
+  gap: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+}
+
+.applicant-name-list-header h2 {
+  font-size: 19px;
+}
+
+.applicant-name-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(218px, 1fr));
+  gap: 8px;
+  max-height: 270px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.applicant-name-list-item {
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 2px 7px;
+  min-height: 76px;
+  padding: 8px 9px;
+  border-radius: 5px;
+}
+
+.applicant-list-number {
+  min-width: 26px;
+  font-size: 12px;
+}
+
+.applicant-list-name,
+.applicant-list-email {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.applicant-list-name {
+  font-size: 14.5px;
+  line-height: 1.22;
+}
+
+.applicant-list-email {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.applicant-list-status,
+.applicant-list-extra {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 11.7px;
+  line-height: 1.2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Main applicant table: balanced fixed layout */
+table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+th,
+td {
+  padding: 6px 6px;
+  line-height: 1.24;
+}
+
+th {
+  font-size: 12.5px;
+  white-space: normal;
+}
+
+td {
+  overflow: hidden;
+  font-size: 12.5px;
+  vertical-align: middle;
+}
+
+tbody tr {
+  height: 58px;
+}
+
+/* Column width balance: narrow name/email unused space, make utility columns even */
+th:nth-child(1),
+td:nth-child(1) {
+  width: 2.2%;
+  text-align: center;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+  width: 10.2%;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+  width: 14.2%;
+}
+
+th:nth-child(4),
+td:nth-child(4) {
+  width: 5.2%;
+}
+
+th:nth-child(5),
+td:nth-child(5) {
+  width: 5.4%;
+}
+
+th:nth-child(6),
+td:nth-child(6) {
+  width: 6.4%;
+}
+
+th:nth-child(7),
+td:nth-child(7),
+th:nth-child(8),
+td:nth-child(8) {
+  width: 6.1%;
+  text-align: center;
+}
+
+th:nth-child(9),
+td:nth-child(9),
+th:nth-child(10),
+td:nth-child(10) {
+  width: 5.1%;
+}
+
+th:nth-child(11),
+td:nth-child(11) {
+  width: 7.2%;
+}
+
+th:nth-child(12),
+td:nth-child(12) {
+  width: 7.4%;
+}
+
+th:nth-child(13),
+td:nth-child(13) {
+  width: 5.7%;
+}
+
+th:nth-child(14),
+td:nth-child(14) {
+  width: 8.2%;
+}
+
+th:nth-child(15),
+td:nth-child(15) {
+  width: 4.0%;
+  text-align: center;
+}
+
+th:nth-child(16),
+td:nth-child(16) {
+  width: 3.6%;
+  text-align: center;
+}
+
+/* Name and email: always one line */
+td:nth-child(2),
+td:nth-child(3) {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+td:nth-child(2) .applicant-name-button {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Two-line compact cells */
+td:nth-child(5),
+td:nth-child(6),
+td:nth-child(9),
+td:nth-child(10),
+td:nth-child(11),
+td:nth-child(13),
+td:nth-child(15) {
+  font-size: 11.5px;
+  line-height: 1.18;
+  white-space: normal;
+}
+
+td:nth-child(9),
+td:nth-child(10) {
+  text-align: center;
+}
+
+td:nth-child(11) {
+  font-size: 11px;
+}
+
+/* Keep date/url controls usable but not too wide */
+td:nth-child(12) input[type='date'],
+td:nth-child(14) input[type='url'] {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 6px;
+  font-size: 12px;
+}
+
+td:nth-child(12) input[type='date'] {
+  min-width: 104px;
+}
+
+td:nth-child(14) input[type='url'] {
+  min-width: 0;
+}
+
+.visa-status-pill,
+.deadline-badge,
+.crm-completion-pill {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 3px 6px;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+td button:not(.applicant-name-button) {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 5px 7px;
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1700px) {
+  th,
+  td {
+    padding: 5px 5px;
+  }
+
+  th {
+    font-size: 11.5px;
+  }
+
+  td {
+    font-size: 11.8px;
+  }
+
+  td:nth-child(5),
+  td:nth-child(6),
+  td:nth-child(9),
+  td:nth-child(10),
+  td:nth-child(11),
+  td:nth-child(13),
+  td:nth-child(15) {
+    font-size: 10.8px;
+  }
+
+  .visa-status-pill,
+  .deadline-badge,
+  .crm-completion-pill {
+    font-size: 10.5px;
+  }
+}
+
+@media (max-width: 1350px) {
+  table {
+    min-width: 1240px;
+  }
+
+  .applicant-name-list-grid {
+    grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+  }
+}
