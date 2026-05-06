@@ -13,6 +13,27 @@ type Applicant = {
   oneDriveLink: string;
 };
 
+const FORM_COLUMNS = {
+  firstName: 'First Name (e.g. John)',
+  middleName: 'Middle Name (e.g. Alan)',
+  lastName: 'Last Name (e.g. Smith)',
+  dateOfBirth: 'Date of Birth (yyyy/MM/dd)',
+  nationality: 'Nationality (Corresponds your passport / e.g. JAPAN)',
+  answerEmail: 'E-mail',
+  formEmail: 'メール'
+} as const;
+
+const PROGRESS_COLUMNS = {
+  name: '氏名',
+  email: 'メール',
+  birthDate: '生年月日',
+  nationality: '国籍',
+  passport: 'パスポートコピー提出',
+  enrollment: '在籍証明書提出',
+  dueDate: '提出期限',
+  oneDriveLink: 'OneDriveリンク'
+} as const;
+
 const toString = (value: unknown): string => (value == null ? '' : String(value).trim());
 
 const getValue = (row: Record<string, unknown>, keys: string[]): unknown => {
@@ -24,14 +45,14 @@ const getValue = (row: Record<string, unknown>, keys: string[]): unknown => {
   return '';
 };
 
-const formatBirthDate = (value: unknown): string => {
+const formatDate = (value: unknown, separator: '/' | '-'): string => {
   if (typeof value === 'number') {
     const parsed = XLSX.SSF.parse_date_code(value);
     if (!parsed) return '';
     const yyyy = parsed.y.toString().padStart(4, '0');
     const mm = parsed.m.toString().padStart(2, '0');
     const dd = parsed.d.toString().padStart(2, '0');
-    return `${yyyy}/${mm}/${dd}`;
+    return [yyyy, mm, dd].join(separator);
   }
 
   const text = toString(value);
@@ -42,8 +63,12 @@ const formatBirthDate = (value: unknown): string => {
   if (!matched) return normalized;
 
   const [, y, m, d] = matched;
-  return `${y}/${m.padStart(2, '0')}/${d.padStart(2, '0')}`;
+  return [y, m.padStart(2, '0'), d.padStart(2, '0')].join(separator);
 };
+
+const formatBirthDate = (value: unknown): string => formatDate(value, '/');
+
+const formatDueDate = (value: unknown): string => formatDate(value, '-');
 
 const toBool = (value: unknown): boolean => {
   const text = toString(value).toLowerCase();
@@ -53,11 +78,11 @@ const toBool = (value: unknown): boolean => {
 const makeId = (name: string, index: number) => `${name || 'applicant'}-${index}`;
 
 const createFullName = (row: Record<string, unknown>): string => {
-  const first = toString(row['First Name (e.g. John)']);
-  const middle = toString(row['Middle Name (e.g. Alan)']);
-  const last = toString(row['Last Name (e.g. Smith)']);
+  const first = toString(row[FORM_COLUMNS.firstName]);
+  const middle = toString(row[FORM_COLUMNS.middleName]);
+  const last = toString(row[FORM_COLUMNS.lastName]);
   const fullName = [first, middle, last].filter(Boolean).join(' ');
-  return fullName || toString(getValue(row, ['名前', '氏名', 'name']));
+  return fullName || toString(getValue(row, ['名前', PROGRESS_COLUMNS.name, 'name']));
 };
 
 function App() {
@@ -84,40 +109,38 @@ function App() {
 
     const firstRowKeys = Object.keys(rows[0]);
     const isProgressSheet =
-      firstRowKeys.includes('パスポートコピー提出') ||
-      firstRowKeys.includes('在籍証明書提出') ||
-      firstRowKeys.includes('OneDriveリンク') ||
-      firstRowKeys.includes('提出期限') ||
+      firstRowKeys.includes(PROGRESS_COLUMNS.passport) ||
+      firstRowKeys.includes(PROGRESS_COLUMNS.enrollment) ||
+      firstRowKeys.includes(PROGRESS_COLUMNS.oneDriveLink) ||
+      firstRowKeys.includes(PROGRESS_COLUMNS.dueDate) ||
       firstRowKeys.includes('期日');
 
     const next = rows.map((row, index) => {
       if (isProgressSheet) {
-        const name = toString(getValue(row, ['氏名', '名前', 'name']));
+        const name = toString(getValue(row, [PROGRESS_COLUMNS.name, '名前', 'name']));
         return {
           id: makeId(name, index),
           name,
-          email: toString(getValue(row, ['メール', 'E-mail', 'email'])),
-          birthDate: formatBirthDate(getValue(row, ['生年月日', 'Date of Birth (yyyy/MM/dd)', 'birthDate'])),
-          nationality: toString(
-            getValue(row, ['国籍', 'Nationality (Corresponds your passport / e.g. JAPAN)', 'nationality'])
-          ),
-          passportSubmitted: toBool(getValue(row, ['パスポートコピー提出', 'passportSubmitted'])),
-          enrollmentSubmitted: toBool(getValue(row, ['在籍証明書提出', 'enrollmentSubmitted'])),
-          dueDate: toString(getValue(row, ['提出期限', '期日', 'dueDate'])),
-          oneDriveLink: toString(getValue(row, ['OneDriveリンク', 'oneDriveLink']))
+          email: toString(getValue(row, [PROGRESS_COLUMNS.email, FORM_COLUMNS.answerEmail, 'email'])),
+          birthDate: formatBirthDate(getValue(row, [PROGRESS_COLUMNS.birthDate, FORM_COLUMNS.dateOfBirth, 'birthDate'])),
+          nationality: toString(getValue(row, [PROGRESS_COLUMNS.nationality, FORM_COLUMNS.nationality, 'nationality'])),
+          passportSubmitted: toBool(getValue(row, [PROGRESS_COLUMNS.passport, 'passportSubmitted'])),
+          enrollmentSubmitted: toBool(getValue(row, [PROGRESS_COLUMNS.enrollment, 'enrollmentSubmitted'])),
+          dueDate: formatDueDate(getValue(row, [PROGRESS_COLUMNS.dueDate, '期日', 'dueDate'])),
+          oneDriveLink: toString(getValue(row, [PROGRESS_COLUMNS.oneDriveLink, 'oneDriveLink']))
         };
       }
 
       const name = createFullName(row);
-      const answerEmail = toString(getValue(row, ['E-mail']));
-      const formEmail = toString(getValue(row, ['メール']));
+      const answerEmail = toString(getValue(row, [FORM_COLUMNS.answerEmail]));
+      const formEmail = toString(getValue(row, [FORM_COLUMNS.formEmail]));
 
       return {
         id: makeId(name, index),
         name,
         email: answerEmail || formEmail,
-        birthDate: formatBirthDate(getValue(row, ['Date of Birth (yyyy/MM/dd)', '生年月日'])),
-        nationality: toString(getValue(row, ['Nationality (Corresponds your passport / e.g. JAPAN)', '国籍'])),
+        birthDate: formatBirthDate(getValue(row, [FORM_COLUMNS.dateOfBirth, PROGRESS_COLUMNS.birthDate])),
+        nationality: toString(getValue(row, [FORM_COLUMNS.nationality, PROGRESS_COLUMNS.nationality])),
         passportSubmitted: false,
         enrollmentSubmitted: false,
         dueDate: '',
@@ -134,14 +157,14 @@ function App() {
 
   const exportStatus = () => {
     const rows = applicants.map((a) => ({
-      氏名: a.name,
-      メール: a.email,
-      生年月日: a.birthDate,
-      国籍: a.nationality,
-      パスポートコピー提出: a.passportSubmitted ? '提出済み' : '未提出',
-      在籍証明書提出: a.enrollmentSubmitted ? '提出済み' : '未提出',
-      提出期限: a.dueDate,
-      OneDriveリンク: a.oneDriveLink
+      [PROGRESS_COLUMNS.name]: a.name,
+      [PROGRESS_COLUMNS.email]: a.email,
+      [PROGRESS_COLUMNS.birthDate]: a.birthDate,
+      [PROGRESS_COLUMNS.nationality]: a.nationality,
+      [PROGRESS_COLUMNS.passport]: a.passportSubmitted ? '提出済み' : '未提出',
+      [PROGRESS_COLUMNS.enrollment]: a.enrollmentSubmitted ? '提出済み' : '未提出',
+      [PROGRESS_COLUMNS.dueDate]: a.dueDate,
+      [PROGRESS_COLUMNS.oneDriveLink]: a.oneDriveLink
     }));
 
     const sheet = XLSX.utils.json_to_sheet(rows);
