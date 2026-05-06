@@ -1923,109 +1923,46 @@ function App() {
           )}
 
           {!!applicants.length && (
-            <section className="pending-reminders">
-              <h2>未提出者リスト・リマインド文面</h2>
+            <section className="applicant-name-list-panel">
+              <div className="applicant-name-list-header">
+                <div>
+                  <h2>応募者氏名一覧</h2>
+                  <p>氏名をクリックすると個人ページを開きます。下の表では提出状況を横断確認できます。</p>
+                </div>
+                <span>{filteredApplicants.length}名表示中</span>
+              </div>
 
-              {pendingApplicants.length ? (
-                <>
-                  <p>未提出者：{pendingApplicants.length}名</p>
+              <div className="applicant-name-list-grid">
+                {filteredApplicants.map((applicant) => {
+                  const missingCount = getMissingDocuments(applicant).length;
+                  const confirmationMissingCount = getMissingConfirmations(applicant).length;
+                  const applicantNumber = applicants.findIndex((item) => item.id === applicant.id) + 1;
+                  const needsDietaryAttention = applicant.hasFoodAllergy || applicant.hasReligiousDietaryRestriction;
 
-                  <div className="reminder-grid">
-                    <div className="reminder-list">
-                      {pendingApplicants.map((applicant) => {
-                        const missingItems = getMissingDocuments(applicant).map((item) => item.jp);
-
-                        return (
-                          <div
-                            key={applicant.id}
-                            className={`reminder-card ${reminderApplicant?.id === applicant.id ? 'is-selected' : ''}`}
-                          >
-                            <div className="reminder-card-header">
-                              <strong>{applicant.name || '氏名未入力'}</strong>
-                              <span className={getDeadlineClassName(applicant)}>{getDeadlineLabel(applicant)}</span>
-                            </div>
-                            <p>未提出：{missingItems.join('、')}</p>
-                            <p>
-                              期限：{applicant.dueDate || '未設定'} ／ OneDrive：
-                              {applicant.oneDriveLink.trim() ? '設定済み' : '未設定'}
-                            </p>
-                            <p>
-                              リマインド：
-                              {applicant.reminderCount > 0
-                                ? `${applicant.reminderCount}回（最終：${applicant.reminderSentDate || '日付未入力'}）`
-                                : '未送信'}
-                            </p>
-                            <button type="button" onClick={() => openReminderForApplicant(applicant.id)}>
-                              文面を表示
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <div>
-                      {reminderApplicant ? (
-                        <>
-                          <h3>
-                            {reminderApplicant.name} 宛リマインド文面{' '}
-                            <span className={getDeadlineClassName(reminderApplicant)}>
-                              {getDeadlineLabel(reminderApplicant)}
-                            </span>
-                          </h3>
-                          <textarea
-                            readOnly
-                            rows={14}
-                            value={createReminderEmail(reminderApplicant)}
-                            className="reminder-textarea"
-                          />
-
-                          <div className="reminder-actions">
-                            <label>
-                              送信担当者:
-                              <input
-                                type="text"
-                                placeholder="例：田中"
-                                value={reminderStaffInput}
-                                onChange={(e) => setReminderStaffInput(e.target.value)}
-                              />
-                            </label>
-                            <button type="button" onClick={copyReminderEmail}>
-                              文面をコピー
-                            </button>
-                            <button type="button" onClick={markReminderAsSent}>
-                              リマインド送信済みにする
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateApplicant(reminderApplicant.id, {
-                                  nextAction: createNextActionSuggestion(reminderApplicant)
-                                })
-                              }
-                            >
-                              次にやることへ反映
-                            </button>
-                          </div>
-
-                          <p className="reminder-record">
-                            記録：{reminderApplicant.reminderCount}回 ／ 最終送信日：
-                            {reminderApplicant.reminderSentDate || '未送信'} ／ 担当者：
-                            {reminderApplicant.reminderStaff || '未入力'}
-                          </p>
-
-                          {reminderApplicant.reminderNote && (
-                            <textarea readOnly rows={4} value={reminderApplicant.reminderNote} className="reminder-note" />
-                          )}
-                        </>
-                      ) : (
-                        <p>左の未提出者から文面を表示する応募者を選んでください。</p>
-                      )}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <p>未提出者はいません。全員の書類提出が完了しています。</p>
-              )}
+                  return (
+                    <button
+                      key={applicant.id}
+                      type="button"
+                      className="applicant-name-list-item"
+                      onClick={() => openApplicantPage(applicant.id)}
+                    >
+                      <span className="applicant-list-number">#{applicantNumber || '-'}</span>
+                      <span className="applicant-list-name">{applicant.name || '氏名未入力'}</span>
+                      <span className="applicant-list-email">{applicant.email || 'メール未入力'}</span>
+                      <span className="applicant-list-status">
+                        書類 {missingCount ? `${missingCount}件未完了` : '完了'} ／ 確認{' '}
+                        {confirmationMissingCount ? `${confirmationMissingCount}件未確認` : '済'}
+                      </span>
+                      <span className="applicant-list-extra">
+                        ビザ：{getVisaStatusLabel(applicant)}
+                        {needsDietaryAttention
+                          ? ` ／ 食事：${getFoodAllergySummary(applicant)}・${getReligiousDietarySummary(applicant)}`
+                          : ''}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </section>
           )}
 
@@ -2133,6 +2070,115 @@ function App() {
               )}
             </tbody>
           </table>
+
+          {!!applicants.length && (
+            <section className="pending-reminders">
+              <h2>未提出者リスト・リマインド文面</h2>
+
+              {pendingApplicants.length ? (
+                <>
+                  <p>未提出者：{pendingApplicants.length}名</p>
+
+                  <div className="reminder-grid">
+                    <div className="reminder-list">
+                      {pendingApplicants.map((applicant) => {
+                        const missingItems = getMissingDocuments(applicant).map((item) => item.jp);
+
+                        return (
+                          <div
+                            key={applicant.id}
+                            className={`reminder-card ${reminderApplicant?.id === applicant.id ? 'is-selected' : ''}`}
+                          >
+                            <div className="reminder-card-header">
+                              <strong>{applicant.name || '氏名未入力'}</strong>
+                              <span className={getDeadlineClassName(applicant)}>{getDeadlineLabel(applicant)}</span>
+                            </div>
+                            <p>未提出：{missingItems.join('、')}</p>
+                            <p>
+                              期限：{applicant.dueDate || '未設定'} ／ OneDrive：
+                              {applicant.oneDriveLink.trim() ? '設定済み' : '未設定'}
+                            </p>
+                            <p>
+                              リマインド：
+                              {applicant.reminderCount > 0
+                                ? `${applicant.reminderCount}回（最終：${applicant.reminderSentDate || '日付未入力'}）`
+                                : '未送信'}
+                            </p>
+                            <button type="button" onClick={() => openReminderForApplicant(applicant.id)}>
+                              文面を表示
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div>
+                      {reminderApplicant ? (
+                        <>
+                          <h3>
+                            {reminderApplicant.name} 宛リマインド文面{' '}
+                            <span className={getDeadlineClassName(reminderApplicant)}>
+                              {getDeadlineLabel(reminderApplicant)}
+                            </span>
+                          </h3>
+                          <textarea
+                            readOnly
+                            rows={14}
+                            value={createReminderEmail(reminderApplicant)}
+                            className="reminder-textarea"
+                          />
+
+                          <div className="reminder-actions">
+                            <label>
+                              送信担当者:
+                              <input
+                                type="text"
+                                placeholder="例：田中"
+                                value={reminderStaffInput}
+                                onChange={(e) => setReminderStaffInput(e.target.value)}
+                              />
+                            </label>
+                            <button type="button" onClick={copyReminderEmail}>
+                              文面をコピー
+                            </button>
+                            <button type="button" onClick={markReminderAsSent}>
+                              リマインド送信済みにする
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateApplicant(reminderApplicant.id, {
+                                  nextAction: createNextActionSuggestion(reminderApplicant)
+                                })
+                              }
+                            >
+                              次にやることへ反映
+                            </button>
+                          </div>
+
+                          <p className="reminder-record">
+                            記録：{reminderApplicant.reminderCount}回 ／ 最終送信日：
+                            {reminderApplicant.reminderSentDate || '未送信'} ／ 担当者：
+                            {reminderApplicant.reminderStaff || '未入力'}
+                          </p>
+
+                          {reminderApplicant.reminderNote && (
+                            <textarea readOnly rows={4} value={reminderApplicant.reminderNote} className="reminder-note" />
+                          )}
+                        </>
+                      ) : (
+                        <p>左の未提出者から文面を表示する応募者を選んでください。</p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <p>未提出者はいません。全員の書類提出が完了しています。</p>
+              )}
+            </section>
+          )}
+
+
         </>
       )}
     </main>

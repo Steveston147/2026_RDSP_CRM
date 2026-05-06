@@ -2155,579 +2155,131 @@ textarea {
     max-height: 42px !important;
   }
 }
-/* Three-column professional CRM layout override - 2026-05-06
-   Keep existing functions unchanged. This section only adjusts spacing, column rhythm, and print balance. */
-:root {
-  --ui-bg: #f1f3f5;
-  --ui-surface: #ffffff;
-  --ui-border: #b9c2cc;
-  --ui-border-strong: #7f8a96;
-  --ui-text: #1f2328;
-  --ui-muted: #4f5965;
-  --ui-accent: #244d7d;
-  --ui-accent-soft: #eef4fb;
-}
 
-body {
-  background: var(--ui-bg);
-  color: var(--ui-text);
-  font-size: 15.5px;
-}
-
-.container {
-  max-width: 1920px;
-  padding: 24px 26px;
-}
-
-.crm-page {
-  font-size: 15.5px;
-  margin-top: 18px;
-}
-
-.crm-topbar {
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.crm-topbar button,
-.crm-section-card button,
-.primary-action {
-  padding: 8px 12px;
-  font-size: 14.5px;
-  border-radius: 5px;
-}
-
-.crm-hero {
-  padding: 18px 20px;
-  border: 1px solid var(--ui-border);
+/* Applicant quick name list - placed above the main table */
+.applicant-name-list-panel {
+  margin: 18px 0 14px;
+  padding: 16px;
+  border: 1px solid #c9d1d9;
   border-radius: 8px;
-  background: var(--ui-surface);
-  box-shadow: none;
-}
-
-.crm-hero h2 {
-  font-size: 30px;
-  line-height: 1.2;
-}
-
-.crm-kicker {
-  font-size: 12.5px;
-}
-
-.crm-email {
-  font-size: 15.5px;
-}
-
-/* Make the personal confirmation page follow a steady 3-column rhythm. */
-.crm-meta-grid,
-.crm-status-board,
-.dietary-detail-grid,
-.checkbox-group,
-.crm-form-grid,
-.communication-form-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-}
-
-.crm-meta-grid {
-  gap: 12px;
-  margin: 16px 0 18px;
-}
-
-.crm-meta-grid > div {
-  padding: 12px 13px;
-  border-radius: 6px;
-  border-color: var(--ui-border);
-}
-
-.crm-meta-grid span {
-  font-size: 12.5px;
-  color: var(--ui-muted);
-}
-
-.crm-meta-grid strong {
-  font-size: 15.5px;
-  line-height: 1.35;
-}
-
-.crm-layout {
-  grid-template-columns: minmax(0, 1fr) 440px;
-  gap: 18px;
-}
-
-.crm-main,
-.crm-side {
-  gap: 16px;
-}
-
-.crm-section-card {
-  padding: 16px 17px;
-  border: 1px solid var(--ui-border);
-  border-radius: 7px;
   background: #fff;
-  box-shadow: none;
 }
 
-.crm-section-card h3 {
-  margin: 0 0 13px;
-  padding-bottom: 9px;
-  border-bottom: 1px solid var(--ui-border);
-  font-size: 18.5px;
-  line-height: 1.25;
+.applicant-name-list-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #d0d7de;
 }
 
-.crm-section-card h4 {
-  font-size: 15.5px;
+.applicant-name-list-header h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
 }
 
-.crm-section-card label {
-  margin-bottom: 10px;
-  line-height: 1.5;
-}
-
-.crm-section-card input[type='text'],
-.crm-section-card input[type='date'],
-.crm-section-card input[type='url'],
-.crm-section-card input[type='number'],
-.crm-section-card textarea,
-.communication-form-grid select {
-  margin-top: 5px;
-  padding: 8px 10px;
-  font-size: 14.5px;
-  border-color: var(--ui-border-strong);
-  border-radius: 5px;
-}
-
-.crm-section-card textarea {
-  min-height: 76px;
-}
-
-.crm-check-card {
-  grid-template-columns: 18px 1fr auto !important;
-  min-height: 48px;
-  gap: 9px !important;
-  padding: 9px 11px !important;
-  border-radius: 5px;
-  background: #f7f9fb;
-  font-size: 14.5px;
-}
-
-.crm-check-card strong {
-  font-size: 13.5px;
-}
-
-.inline-check {
-  padding: 8px 10px !important;
-  border-radius: 5px;
-  font-size: 14.5px;
-}
-
-.inline-check input,
-.crm-check-card input {
-  width: 15px;
-  height: 15px;
-}
-
-.dietary-detail-card {
-  padding: 13px;
-  border-radius: 6px;
-  background: #f7f9fb;
-}
-
-/* Reset earlier wide/span rules so form areas also visually follow three columns. */
-.communication-form-grid label,
-.crm-form-grid label {
-  grid-column: auto !important;
-}
-
-.communication-form-grid label:nth-of-type(5),
-.communication-form-grid label:nth-of-type(6),
-.communication-form-grid label:nth-of-type(7),
-.crm-form-grid label:nth-of-type(1),
-.crm-form-grid label:nth-of-type(4),
-.crm-form-grid label:nth-of-type(5) {
-  grid-column: auto !important;
-}
-
-.communication-form-grid {
-  gap: 12px;
-}
-
-.crm-form-grid {
-  gap: 12px;
-}
-
-.crm-timeline {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.crm-timeline-item {
-  padding: 12px;
-  border-radius: 5px;
-  background: #f7f9fb;
-}
-
-.crm-timeline-item span {
-  font-size: 12.5px;
-}
-
-.crm-timeline-item pre {
-  max-height: 190px;
+.applicant-name-list-header p {
+  margin: 0;
+  color: #59636e;
   font-size: 14px;
-  line-height: 1.48;
 }
 
-.crm-timeline-primary {
-  grid-column: auto !important;
+.applicant-name-list-header > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  padding: 5px 10px;
+  border: 1px solid #c9d1d9;
+  border-radius: 999px;
+  background: #f6f8fa;
+  color: #59636e;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-.crm-suggestion {
-  padding: 12px;
-  font-size: 14.5px;
-  line-height: 1.48;
-  border-color: #b7c7d8;
-  border-radius: 5px;
-  background: var(--ui-accent-soft);
+.applicant-name-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
 }
 
-.visa-section-card {
-  border-color: #9eb8d4 !important;
-  background: #fbfdff !important;
+.applicant-name-list-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 8px;
+  width: 100%;
+  min-height: 82px;
+  padding: 10px 11px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #1f2328;
+  text-align: left;
 }
 
-.visa-status-pill,
-.deadline-badge,
-.crm-completion-pill {
-  padding: 4px 9px;
+.applicant-name-list-item:hover:not(:disabled) {
+  border-color: #8b949e;
+  background: #eef2f6;
+}
+
+.applicant-list-number {
+  grid-row: span 4;
+  min-width: 34px;
+  color: #59636e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.applicant-list-name {
+  overflow: hidden;
+  color: #0969da;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.applicant-list-email {
+  overflow: hidden;
+  color: #424a53;
   font-size: 12.5px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.empty-note {
-  font-size: 13.5px;
-  line-height: 1.5;
+.applicant-list-status,
+.applicant-list-extra {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #59636e;
+  font-size: 12px;
+  line-height: 1.28;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-@media (max-width: 1600px) {
-  .crm-meta-grid,
-  .crm-status-board,
-  .dietary-detail-grid,
-  .checkbox-group,
-  .crm-form-grid,
-  .communication-form-grid,
-  .crm-timeline {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  }
-}
-
-@media (max-width: 1300px) {
-  .crm-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .crm-meta-grid,
-  .crm-status-board,
-  .dietary-detail-grid,
-  .checkbox-group,
-  .crm-form-grid,
-  .communication-form-grid,
-  .crm-timeline {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
+.pending-reminders {
+  margin-top: 22px;
 }
 
 @media (max-width: 900px) {
-  .crm-meta-grid,
-  .crm-status-board,
-  .dietary-detail-grid,
-  .checkbox-group,
-  .crm-form-grid,
-  .communication-form-grid,
-  .crm-timeline {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-/* Keep applicant print compact, but use the same three-column visual logic. */
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 7mm;
+  .applicant-name-list-header {
+    flex-direction: column;
   }
 
-  body[data-print-mode='applicant'] .crm-meta-grid,
-  body[data-print-mode='applicant'] .crm-status-board,
-  body[data-print-mode='applicant'] .dietary-detail-grid,
-  body[data-print-mode='applicant'] .checkbox-group,
-  body[data-print-mode='applicant'] .crm-form-grid,
-  body[data-print-mode='applicant'] .communication-form-grid,
-  body[data-print-mode='applicant'] .crm-timeline {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
-
-  body[data-print-mode='applicant'] .crm-section-card {
-    padding: 5px !important;
-    margin-bottom: 4px !important;
-  }
-
-  body[data-print-mode='applicant'] .crm-section-card h3 {
-    font-size: 10.8px !important;
-  }
-
-  body[data-print-mode='applicant'] .crm-check-card {
-    min-height: 23px !important;
-    font-size: 9px !important;
-  }
-
-  body[data-print-mode='applicant'] .crm-timeline-item pre {
-    max-height: 34px !important;
-    overflow: hidden !important;
-  }
-}
-
-/* Table list layout refinement - balanced column widths and two-line cells */
-.table-ui-note {
-  display: none;
-}
-
-main.container > table {
-  table-layout: fixed;
-  min-width: 1840px;
-  width: 100%;
-  border: 1px solid #c9d1d9;
-  background: #fff;
-}
-
-main.container > table th,
-main.container > table td {
-  padding: 10px 8px;
-  border-color: #c9d1d9;
-  font-size: 13.5px;
-  line-height: 1.35;
-  vertical-align: middle;
-}
-
-main.container > table th {
-  background: #eef1f4;
-  color: #1f2328;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-main.container > table tbody tr {
-  min-height: 58px;
-}
-
-main.container > table tbody tr:nth-child(even) {
-  background: #fafbfc;
-}
-
-main.container > table tbody tr:hover {
-  background: #f3f7fb;
-}
-
-/* Column widths: keep name and email readable on one line, reduce blank name space. */
-main.container > table th:nth-child(1),
-main.container > table td:nth-child(1) {
-  width: 42px;
-  text-align: center;
-}
-
-main.container > table th:nth-child(2),
-main.container > table td:nth-child(2) {
-  width: 185px;
-}
-
-main.container > table th:nth-child(3),
-main.container > table td:nth-child(3) {
-  width: 270px;
-}
-
-main.container > table th:nth-child(4),
-main.container > table td:nth-child(4) {
-  width: 92px;
-}
-
-main.container > table th:nth-child(5),
-main.container > table td:nth-child(5) {
-  width: 108px;
-}
-
-main.container > table th:nth-child(6),
-main.container > table td:nth-child(6) {
-  width: 102px;
-  text-align: center;
-}
-
-main.container > table th:nth-child(7),
-main.container > table td:nth-child(7),
-main.container > table th:nth-child(8),
-main.container > table td:nth-child(8) {
-  width: 112px;
-  text-align: center;
-}
-
-main.container > table th:nth-child(9),
-main.container > table td:nth-child(9),
-main.container > table th:nth-child(10),
-main.container > table td:nth-child(10) {
-  width: 92px;
-  text-align: center;
-}
-
-main.container > table th:nth-child(11),
-main.container > table td:nth-child(11) {
-  width: 118px;
-}
-
-main.container > table th:nth-child(12),
-main.container > table td:nth-child(12) {
-  width: 135px;
-}
-
-main.container > table th:nth-child(13),
-main.container > table td:nth-child(13) {
-  width: 104px;
-  text-align: center;
-}
-
-main.container > table th:nth-child(14),
-main.container > table td:nth-child(14) {
-  width: 170px;
-}
-
-main.container > table th:nth-child(15),
-main.container > table td:nth-child(15) {
-  width: 96px;
-  text-align: center;
-}
-
-main.container > table th:nth-child(16),
-main.container > table td:nth-child(16) {
-  width: 92px;
-  text-align: center;
-}
-
-/* Name and email: single line. */
-main.container > table td:nth-child(2),
-main.container > table td:nth-child(3) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-main.container > table td:nth-child(2) .applicant-name-button {
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  color: #0b5cad;
-  font-size: 13.5px;
-  text-overflow: ellipsis;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-
-/* Other text cells: two-line rhythm, smaller only where needed. */
-main.container > table td:nth-child(4),
-main.container > table td:nth-child(5),
-main.container > table td:nth-child(9),
-main.container > table td:nth-child(10),
-main.container > table td:nth-child(11),
-main.container > table td:nth-child(15) {
-  display: table-cell;
-  overflow: hidden;
-  font-size: 12.7px;
-  line-height: 1.28;
-}
-
-main.container > table td:nth-child(9),
-main.container > table td:nth-child(10),
-main.container > table td:nth-child(11),
-main.container > table td:nth-child(15) {
-  max-height: 2.7em;
-}
-
-main.container > table td:nth-child(11) {
-  font-size: 11.8px;
-  line-height: 1.2;
-}
-
-main.container > table td:nth-child(11) br,
-main.container > table td:nth-child(15) br {
-  display: block;
-  content: '';
-}
-
-/* Inputs inside table should fit the column instead of creating useless blank width. */
-main.container > table td input[type='date'],
-main.container > table td input[type='url'] {
-  width: 100%;
-  min-width: 0;
-  padding: 6px 7px;
-  font-size: 12.5px;
-}
-
-main.container > table td input[type='checkbox'] {
-  width: 15px;
-  height: 15px;
-}
-
-main.container > table td .visa-status-pill,
-main.container > table td .deadline-badge {
-  max-width: 100%;
-  padding: 4px 7px;
-  font-size: 11.4px;
-  line-height: 1.2;
-  white-space: normal;
-}
-
-main.container > table td button:not(.applicant-name-button) {
-  padding: 6px 8px;
-  font-size: 12.5px;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-@media (max-width: 1600px) {
-  main.container > table {
-    min-width: 1760px;
-  }
-
-  main.container > table th,
-  main.container > table td {
-    padding: 9px 7px;
-    font-size: 13px;
-  }
-
-  main.container > table th:nth-child(2),
-  main.container > table td:nth-child(2) {
-    width: 172px;
-  }
-
-  main.container > table th:nth-child(3),
-  main.container > table td:nth-child(3) {
-    width: 250px;
+  .applicant-name-list-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media print {
-  body[data-print-mode='list'] table {
-    table-layout: fixed !important;
-    min-width: auto !important;
-  }
-
-  body[data-print-mode='list'] th,
-  body[data-print-mode='list'] td {
-    padding: 2px 3px !important;
-    font-size: 7.5px !important;
-    line-height: 1.15 !important;
-  }
-
-  body[data-print-mode='list'] td:nth-child(2),
-  body[data-print-mode='list'] td:nth-child(3) {
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+  .applicant-name-list-panel {
+    display: none !important;
   }
 }
