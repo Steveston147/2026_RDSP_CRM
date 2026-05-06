@@ -900,3 +900,159 @@ td button {
     grid-template-columns: 1fr;
   }
 }
+
+.visa-section-card {
+  border-color: #b6d7ff !important;
+  background: #fbfdff !important;
+}
+
+.visa-status-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.visa-status-pill {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid #d0d7de;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.visa-unchecked {
+  color: #57606a;
+  border-color: #d0d7de;
+  background: #f6f8fa;
+}
+
+.visa-not-required {
+  color: #116329;
+  border-color: #b7e4c7;
+  background: #dafbe1;
+}
+
+.visa-sent {
+  color: #0969da;
+  border-color: #b6d7ff;
+  background: #ddf4ff;
+}
+
+.visa-pending {
+  color: #7a4d00;
+  border-color: #f0cf65;
+  background: #fff8c5;
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .container {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .controls,
+  .import-message,
+  .urgent-panel,
+  .pending-reminders,
+  .dietary-summary-panel,
+  .crm-topbar {
+    display: none !important;
+  }
+
+  .summary-card,
+  .crm-section-card,
+  .dietary-detail-card,
+  .crm-check-card,
+  .crm-meta-grid > div {
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body[data-print-mode='list'] .crm-page {
+    display: none !important;
+  }
+
+  body[data-print-mode='list'] table {
+    display: table !important;
+    width: 100% !important;
+    font-size: 10px !important;
+    white-space: normal !important;
+  }
+
+  body[data-print-mode='list'] th,
+  body[data-print-mode='list'] td {
+    padding: 4px !important;
+  }
+
+  body[data-print-mode='list'] th:last-child,
+  body[data-print-mode='list'] td:last-child {
+    display: none !important;
+  }
+
+  body[data-print-mode='list'] .applicant-name-button {
+    display: inline !important;
+    border: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+  }
+
+  body[data-print-mode='applicant'] .summary-cards,
+  body[data-print-mode='applicant'] main > p,
+  body[data-print-mode='applicant'] table,
+  body[data-print-mode='applicant'] .dietary-summary-panel,
+  body[data-print-mode='applicant'] .urgent-panel,
+  body[data-print-mode='applicant'] .pending-reminders {
+    display: none !important;
+  }
+
+  body[data-print-mode='applicant'] h1 {
+    display: block !important;
+    margin: 0 0 8px !important;
+    font-size: 18px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-page {
+    display: block !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-layout {
+    display: block !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-main,
+  body[data-print-mode='applicant'] .crm-side {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-section-card button,
+  body[data-print-mode='applicant'] .primary-action,
+  body[data-print-mode='applicant'] .reminder-actions button {
+    display: none !important;
+  }
+
+  textarea,
+  input,
+  select {
+    border: 1px solid #ddd !important;
+    background: #fff !important;
+  }
+}

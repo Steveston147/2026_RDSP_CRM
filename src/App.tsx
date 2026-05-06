@@ -15,6 +15,11 @@ type Applicant = {
   pledgeSubmitted: boolean;
   flightInfoSubmitted: boolean;
   visaDocumentSubmitted: boolean;
+  visaRequirementChecked: boolean;
+  visaSupportRequired: boolean;
+  visaDocumentsSent: boolean;
+  visaDocumentsSentDate: string;
+  visaDocumentsSentStaff: string;
   paymentConfirmed: boolean;
   insuranceConfirmed: boolean;
   dietaryRestrictionConfirmed: boolean;
@@ -66,10 +71,12 @@ type StatusFilter =
   | 'photoMissing'
   | 'pledgeMissing'
   | 'flightInfoMissing'
-  | 'visaDocumentMissing'
+  | 'visaRequired'
+  | 'visaDocumentsNotSent'
   | 'completed';
 type DeadlineStatus = 'completed' | 'unset' | 'overdue' | 'soon' | 'ok';
 type CommunicationType = 'メール送信' | 'メール受信' | '電話' | '書類確認' | 'メモ' | 'その他';
+type PrintMode = 'list' | 'applicant';
 
 type CommunicationDraft = {
   date: string;
@@ -87,8 +94,7 @@ type DocumentField =
   | 'enrollmentSubmitted'
   | 'photoSubmitted'
   | 'pledgeSubmitted'
-  | 'flightInfoSubmitted'
-  | 'visaDocumentSubmitted';
+  | 'flightInfoSubmitted';
 
 type ConfirmationField =
   | 'paymentConfirmed'
@@ -122,8 +128,7 @@ const documentDefinitions: { key: DocumentField; jp: string; en: string }[] = [
   { key: 'enrollmentSubmitted', jp: '在籍証明書', en: 'Certificate of enrollment' },
   { key: 'photoSubmitted', jp: '顔写真', en: 'Photo' },
   { key: 'pledgeSubmitted', jp: '誓約書', en: 'Pledge form' },
-  { key: 'flightInfoSubmitted', jp: 'フライト情報', en: 'Flight information' },
-  { key: 'visaDocumentSubmitted', jp: 'ビザ書類（必要な場合）', en: 'Visa document(s), if applicable' }
+  { key: 'flightInfoSubmitted', jp: 'フライト情報', en: 'Flight information' }
 ];
 
 const confirmationDefinitions: { key: ConfirmationField; label: string }[] = [
@@ -166,7 +171,8 @@ const statusFilterOptions: { value: StatusFilter; label: string }[] = [
   { value: 'photoMissing', label: '顔写真未提出' },
   { value: 'pledgeMissing', label: '誓約書未提出' },
   { value: 'flightInfoMissing', label: 'フライト情報未提出' },
-  { value: 'visaDocumentMissing', label: 'ビザ書類未提出' },
+  { value: 'visaRequired', label: 'ビザ支援書類必要' },
+  { value: 'visaDocumentsNotSent', label: 'ビザ支援書類未送付' },
   { value: 'completed', label: '完了のみ' }
 ];
 
@@ -349,6 +355,23 @@ const getReligiousDietarySummary = (applicant: Applicant) => {
   return selected.length ? selected.join('、') : 'あり（詳細未入力）';
 };
 
+const getVisaStatusLabel = (applicant: Applicant) => {
+  if (!applicant.visaRequirementChecked) return '要否未確認';
+  if (!applicant.visaSupportRequired) return '不要';
+  if (applicant.visaDocumentsSent) {
+    return `必要・送付済み${applicant.visaDocumentsSentDate ? `（${applicant.visaDocumentsSentDate}）` : ''}`;
+  }
+
+  return '必要・未送付';
+};
+
+const getVisaStatusClassName = (applicant: Applicant) => {
+  if (!applicant.visaRequirementChecked) return 'visa-status-pill visa-unchecked';
+  if (!applicant.visaSupportRequired) return 'visa-status-pill visa-not-required';
+  if (applicant.visaDocumentsSent) return 'visa-status-pill visa-sent';
+  return 'visa-status-pill visa-pending';
+};
+
 const getDateOnly = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
 const parseDateInput = (value: string) => {
@@ -445,6 +468,14 @@ const createNextActionSuggestion = (applicant: Applicant) => {
   const missingItems = getMissingDocuments(applicant).map((item) => item.jp);
 
   if (!missingItems.length) {
+    if (!applicant.visaRequirementChecked) {
+      return '書類は完了しています。国籍を確認し、ビザ支援書類が必要かどうかを職員側で確認してください。';
+    }
+
+    if (applicant.visaSupportRequired && !applicant.visaDocumentsSent) {
+      return '書類は完了しています。ビザ支援書類が必要です。必要書類を作成・送付し、送付済みにチェックしてください。';
+    }
+
     const missingConfirmations = getMissingConfirmations(applicant);
 
     if (missingConfirmations.length) {
@@ -566,6 +597,19 @@ const createApplicantFromRow = (row: Record<string, unknown>, index: number): Ap
   pledgeSubmitted: parseSubmitted(getCell(row, ['誓約書', '誓約書提出', 'pledgeSubmitted'])),
   flightInfoSubmitted: parseSubmitted(getCell(row, ['フライト情報', 'フライト情報提出', 'flightInfoSubmitted'])),
   visaDocumentSubmitted: parseSubmitted(getCell(row, ['ビザ書類', 'ビザ書類提出', 'visaDocumentSubmitted'])),
+  visaRequirementChecked:
+    parseSubmitted(getCell(row, ['ビザ要否確認', 'ビザ要否確認済み', 'visaRequirementChecked'])) ||
+    parseAffirmative(getCell(row, ['ビザ支援書類必要', 'ビザ必要', 'visaSupportRequired'])) ||
+    parseSubmitted(getCell(row, ['ビザ支援書類送付済み', 'ビザ書類送付済み', 'visaDocumentsSent'])) ||
+    parseSubmitted(getCell(row, ['ビザ書類', 'ビザ書類提出', 'visaDocumentSubmitted'])),
+  visaSupportRequired:
+    parseAffirmative(getCell(row, ['ビザ支援書類必要', 'ビザ必要', 'visaSupportRequired'])) ||
+    parseSubmitted(getCell(row, ['ビザ書類', 'ビザ書類提出', 'visaDocumentSubmitted'])),
+  visaDocumentsSent:
+    parseSubmitted(getCell(row, ['ビザ支援書類送付済み', 'ビザ書類送付済み', 'visaDocumentsSent'])) ||
+    parseSubmitted(getCell(row, ['ビザ書類', 'ビザ書類提出', 'visaDocumentSubmitted'])),
+  visaDocumentsSentDate: formatInputDate(getCell(row, ['ビザ支援書類送付日', 'ビザ書類送付日', 'visaDocumentsSentDate'])),
+  visaDocumentsSentStaff: getText(row, ['ビザ支援書類送付担当者', 'ビザ書類送付担当者', 'visaDocumentsSentStaff']),
   paymentConfirmed: parseSubmitted(getCell(row, ['支払確認', 'paymentConfirmed'])),
   insuranceConfirmed: parseSubmitted(getCell(row, ['保険確認', 'insuranceConfirmed'])),
   dietaryRestrictionConfirmed: parseSubmitted(getCell(row, ['食事制限確認', '食物アレルギー・宗教的食物制限確認', 'dietaryRestrictionConfirmed'])),
@@ -743,10 +787,7 @@ function App() {
 
   const exportFileNamePreview = useMemo(() => createExportFileName(operatorName), [operatorName]);
 
-  const pendingApplicants = useMemo(
-    () => applicants.filter((a) => !a.passportSubmitted || !a.enrollmentSubmitted),
-    [applicants]
-  );
+  const pendingApplicants = useMemo(() => applicants.filter((a) => !isCompleted(a)), [applicants]);
 
   const urgentApplicants = useMemo(
     () => pendingApplicants.filter((applicant) => ['overdue', 'soon'].includes(getDeadlineStatus(applicant))),
@@ -777,6 +818,14 @@ function App() {
     () => applicants.filter((applicant) => getMissingConfirmations(applicant).length > 0).length,
     [applicants]
   );
+  const visaRequirementUncheckedCount = useMemo(
+    () => applicants.filter((applicant) => !applicant.visaRequirementChecked).length,
+    [applicants]
+  );
+  const visaDocumentsPendingCount = useMemo(
+    () => applicants.filter((applicant) => applicant.visaSupportRequired && !applicant.visaDocumentsSent).length,
+    [applicants]
+  );
 
   const dietaryAttentionApplicants = useMemo(
     () => applicants.filter((applicant) => applicant.hasFoodAllergy || applicant.hasReligiousDietaryRestriction),
@@ -796,7 +845,7 @@ function App() {
 
       switch (statusFilter) {
         case 'pending':
-          return !a.passportSubmitted || !a.enrollmentSubmitted;
+          return !isCompleted(a);
         case 'passportMissing':
           return !a.passportSubmitted;
         case 'enrollmentMissing':
@@ -807,10 +856,12 @@ function App() {
           return !a.pledgeSubmitted;
         case 'flightInfoMissing':
           return !a.flightInfoSubmitted;
-        case 'visaDocumentMissing':
-          return !a.visaDocumentSubmitted;
+        case 'visaRequired':
+          return a.visaSupportRequired;
+        case 'visaDocumentsNotSent':
+          return a.visaSupportRequired && !a.visaDocumentsSent;
         case 'completed':
-          return a.passportSubmitted && a.enrollmentSubmitted;
+          return isCompleted(a);
         default:
           return true;
       }
@@ -826,7 +877,7 @@ function App() {
     setApplicants(next);
     setSelectedApplicantId(next[0]?.id ?? '');
     setIsApplicantPageOpen(false);
-    setReminderApplicantId(next.find((a) => !a.passportSubmitted || !a.enrollmentSubmitted)?.id ?? '');
+    setReminderApplicantId(next.find((a) => !isCompleted(a))?.id ?? '');
     setImportMessage(`正本Excelを読み込みました：${next.length}名。画面上の作業内容はこのExcelの内容で置き換わりました。`);
     event.target.value = '';
   };
@@ -855,7 +906,7 @@ function App() {
       const nextReminderApplicantId =
         reminderApplicantId && merged.some((applicant) => applicant.id === reminderApplicantId)
           ? reminderApplicantId
-          : merged.find((applicant) => !applicant.passportSubmitted || !applicant.enrollmentSubmitted)?.id ?? '';
+          : merged.find((applicant) => !isCompleted(applicant))?.id ?? '';
 
       setSelectedApplicantId(nextSelectedApplicantId);
       setReminderApplicantId(nextReminderApplicantId);
@@ -889,7 +940,12 @@ function App() {
       顔写真: a.photoSubmitted ? '提出済み' : '未提出',
       誓約書: a.pledgeSubmitted ? '提出済み' : '未提出',
       フライト情報: a.flightInfoSubmitted ? '提出済み' : '未提出',
-      ビザ書類: a.visaDocumentSubmitted ? '提出済み' : '未提出',
+      ビザ要否確認: a.visaRequirementChecked ? '済' : '未',
+      ビザ支援書類必要: a.visaSupportRequired ? '必要' : a.visaRequirementChecked ? '不要' : '未確認',
+      ビザ支援書類送付済み: a.visaDocumentsSent ? '済' : '未',
+      ビザ支援書類送付日: a.visaDocumentsSentDate,
+      ビザ支援書類送付担当者: a.visaDocumentsSentStaff,
+      ビザ状況: getVisaStatusLabel(a),
       書類完了状況: getDocumentCompletionLabel(a),
       支払確認: a.paymentConfirmed ? '済' : '未',
       保険確認: a.insuranceConfirmed ? '済' : '未',
@@ -927,6 +983,8 @@ function App() {
       { 項目: '応募者数', 内容: `${applicants.length}名` },
       { 項目: '未完了', 内容: `${pendingCount}名` },
       { 項目: '確認事項未完了', 内容: `${confirmationPendingCount}名` },
+      { 項目: 'ビザ要否未確認', 内容: `${visaRequirementUncheckedCount}名` },
+      { 項目: 'ビザ支援書類未送付', 内容: `${visaDocumentsPendingCount}名` },
       { 項目: '期限超過', 内容: `${overdueCount}名` },
       { 項目: '期限間近', 内容: `${soonCount}名` },
       { 項目: '期限未設定', 内容: `${unsetDueDateCount}名` },
@@ -1079,6 +1137,48 @@ function App() {
     markReminderAsSentForApplicant(reminderApplicant);
   };
 
+  const markVisaDocumentsAsSentForApplicant = (applicant: Applicant) => {
+    const today = getTodayInputValue();
+    const staff = operatorName.trim() || applicant.visaDocumentsSentStaff || applicant.staff || applicant.reminderStaff;
+    const logLine = `${today} ${staff ? `${staff}：` : ''}ビザ支援書類を送付済みとして記録。`;
+
+    updateApplicant(applicant.id, {
+      visaRequirementChecked: true,
+      visaSupportRequired: true,
+      visaDocumentsSent: true,
+      visaDocumentsSentDate: today,
+      visaDocumentsSentStaff: staff,
+      staff: staff || applicant.staff,
+      responseDate: today,
+      responseDetails: appendLine(applicant.responseDetails, logLine),
+      communicationHistory: appendLine(applicant.communicationHistory, logLine),
+      nextAction: 'ビザ支援書類送付済み。必要に応じて、学生からの受領確認や追加質問を確認してください。'
+    });
+  };
+
+  const printWithMode = (mode: PrintMode) => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    document.body.setAttribute('data-print-mode', mode);
+    const cleanup = () => document.body.removeAttribute('data-print-mode');
+    window.addEventListener('afterprint', cleanup, { once: true });
+    window.setTimeout(() => {
+      window.print();
+      window.setTimeout(cleanup, 1000);
+    }, 80);
+  };
+
+  const printApplicantList = () => {
+    setIsApplicantPageOpen(false);
+    window.setTimeout(() => printWithMode('list'), 120);
+  };
+
+  const printCurrentApplicantPage = () => {
+    if (!selectedApplicant) return;
+    setIsApplicantPageOpen(true);
+    window.setTimeout(() => printWithMode('applicant'), 120);
+  };
+
   const renderApplicantCrmPage = (applicant: Applicant) => {
     const missingDocuments = getMissingDocuments(applicant);
     const applicantNumber = selectedApplicantIndex >= 0 ? selectedApplicantIndex + 1 : '-';
@@ -1097,6 +1197,9 @@ function App() {
           </button>
           <button type="button" onClick={() => openReminderForApplicant(applicant.id)}>
             この学生をリマインド対象にする
+          </button>
+          <button type="button" onClick={printCurrentApplicantPage}>
+            この個人ページを印刷
           </button>
         </div>
 
@@ -1122,6 +1225,10 @@ function App() {
           <div>
             <span>国籍</span>
             <strong>{applicant.nationality || '未入力'}</strong>
+          </div>
+          <div>
+            <span>ビザ状況</span>
+            <strong>{getVisaStatusLabel(applicant)}</strong>
           </div>
           <div>
             <span>食物アレルギー</span>
@@ -1184,6 +1291,86 @@ function App() {
                     onChange={(e) => updateApplicant(applicant.id, { oneDriveLink: e.target.value })}
                   />
                 </label>
+              </div>
+            </section>
+
+            <section className="crm-section-card visa-section-card">
+              <h3>ビザ確認・送付管理</h3>
+              <p className="empty-note">国籍によりビザ支援書類が必要かどうかを職員側で確認し、送付したら送付済みとして記録します。</p>
+              <div className="crm-status-board">
+                <label className="crm-check-card">
+                  <input
+                    type="checkbox"
+                    checked={applicant.visaRequirementChecked}
+                    onChange={(e) =>
+                      updateApplicant(applicant.id, {
+                        visaRequirementChecked: e.target.checked,
+                        visaSupportRequired: e.target.checked ? applicant.visaSupportRequired : false,
+                        visaDocumentsSent: e.target.checked ? applicant.visaDocumentsSent : false
+                      })
+                    }
+                  />
+                  <span>ビザ要否を確認済み</span>
+                  <strong>{applicant.visaRequirementChecked ? '確認済み' : '未確認'}</strong>
+                </label>
+                <label className="crm-check-card">
+                  <input
+                    type="checkbox"
+                    checked={applicant.visaSupportRequired}
+                    onChange={(e) =>
+                      updateApplicant(applicant.id, {
+                        visaRequirementChecked: true,
+                        visaSupportRequired: e.target.checked,
+                        visaDocumentsSent: e.target.checked ? applicant.visaDocumentsSent : false
+                      })
+                    }
+                  />
+                  <span>ビザ支援書類が必要</span>
+                  <strong>{applicant.visaSupportRequired ? '必要' : applicant.visaRequirementChecked ? '不要' : '未確認'}</strong>
+                </label>
+                <label className="crm-check-card">
+                  <input
+                    type="checkbox"
+                    checked={applicant.visaDocumentsSent}
+                    onChange={(e) =>
+                      updateApplicant(applicant.id, {
+                        visaRequirementChecked: e.target.checked ? true : applicant.visaRequirementChecked,
+                        visaSupportRequired: e.target.checked ? true : applicant.visaSupportRequired,
+                        visaDocumentsSent: e.target.checked,
+                        visaDocumentsSentDate: e.target.checked && !applicant.visaDocumentsSentDate ? getTodayInputValue() : applicant.visaDocumentsSentDate,
+                        visaDocumentsSentStaff:
+                          e.target.checked && !applicant.visaDocumentsSentStaff
+                            ? operatorName.trim() || applicant.staff || applicant.reminderStaff
+                            : applicant.visaDocumentsSentStaff
+                      })
+                    }
+                  />
+                  <span>ビザ支援書類送付済み</span>
+                  <strong>{applicant.visaDocumentsSent ? '送付済み' : '未送付'}</strong>
+                </label>
+                <label>
+                  送付日
+                  <input
+                    type="date"
+                    value={applicant.visaDocumentsSentDate}
+                    onChange={(e) => updateApplicant(applicant.id, { visaDocumentsSentDate: e.target.value })}
+                  />
+                </label>
+                <label>
+                  送付担当者
+                  <input
+                    type="text"
+                    placeholder="例：Tanaka"
+                    value={applicant.visaDocumentsSentStaff}
+                    onChange={(e) => updateApplicant(applicant.id, { visaDocumentsSentStaff: e.target.value })}
+                  />
+                </label>
+              </div>
+              <div className="visa-status-row">
+                <span className={getVisaStatusClassName(applicant)}>{getVisaStatusLabel(applicant)}</span>
+                <button type="button" onClick={() => markVisaDocumentsAsSentForApplicant(applicant)}>
+                  ビザ支援書類を送付済みにする
+                </button>
               </div>
             </section>
 
@@ -1638,6 +1825,9 @@ function App() {
         <button onClick={exportStatus} disabled={!applicants.length}>
           進捗Excelを出力
         </button>
+        <button type="button" onClick={printApplicantList} disabled={!applicants.length}>
+          一覧を印刷
+        </button>
       </section>
 
       {importMessage && <p className="import-message">{importMessage}</p>}
@@ -1655,6 +1845,14 @@ function App() {
           <div className="summary-card summary-unset">
             <span>確認事項未完了</span>
             <strong>{confirmationPendingCount}名</strong>
+          </div>
+          <div className="summary-card summary-unset">
+            <span>ビザ要否未確認</span>
+            <strong>{visaRequirementUncheckedCount}名</strong>
+          </div>
+          <div className="summary-card summary-soon">
+            <span>ビザ未送付</span>
+            <strong>{visaDocumentsPendingCount}名</strong>
           </div>
           <div className="summary-card summary-overdue">
             <span>期限超過</span>
@@ -1839,6 +2037,7 @@ function App() {
                 <th>メール</th>
                 <th>生年月日</th>
                 <th>国籍</th>
+                <th>ビザ</th>
                 <th>パスポートコピー</th>
                 <th>在籍証明書</th>
                 <th>追加書類</th>
@@ -1866,6 +2065,9 @@ function App() {
                     <td>{a.email}</td>
                     <td>{a.birthDate}</td>
                     <td>{a.nationality}</td>
+                    <td>
+                      <span className={getVisaStatusClassName(a)}>{getVisaStatusLabel(a)}</span>
+                    </td>
                     <td>
                       <input
                         type="checkbox"
@@ -1926,7 +2128,7 @@ function App() {
               })}
               {!filteredApplicants.length && (
                 <tr>
-                  <td colSpan={15}>該当する応募者はいません。</td>
+                  <td colSpan={16}>該当する応募者はいません。</td>
                 </tr>
               )}
             </tbody>
