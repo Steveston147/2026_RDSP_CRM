@@ -287,6 +287,145 @@ const appendLine = (currentText: string, newLine: string) => {
   return trimmed ? `${trimmed}\n${newLine}` : newLine;
 };
 
+const createApplicantFromRow = (row: Record<string, unknown>, index: number): Applicant => ({
+  id: makeId(row, index),
+  name: buildApplicantName(row),
+  email: getText(row, ['E-mail', 'メール', '連絡先メールアドレス', 'email']),
+  birthDate: formatBirthDate(getCell(row, ['Date of Birth (yyyy/MM/dd)', 'Date of Birth', '生年月日', 'birthDate'])),
+  nationality: getText(row, [
+    'Nationality (Corresponds your passport / e.g. JAPAN)',
+    'Nationality',
+    '国籍',
+    'nationality'
+  ]),
+  passportSubmitted: parseSubmitted(getCell(row, ['パスポートコピー', 'パスポートコピー提出', 'passportSubmitted'])),
+  enrollmentSubmitted: parseSubmitted(getCell(row, ['在籍証明書', '在籍証明書提出', 'enrollmentSubmitted'])),
+  dueDate: formatInputDate(getCell(row, ['提出期限', '期日', 'dueDate'])),
+  oneDriveLink: getText(row, ['OneDriveリンク', 'oneDriveLink']),
+  memo: getText(row, ['メモ', 'memo']),
+  specialRequest: getText(row, ['特別リクエスト', '特別なリクエスト', 'specialRequest']),
+  responseDetails: getText(row, ['対応内容', '対応', 'responseDetails']),
+  staff: getText(row, ['担当者', 'staff']),
+  responseDate: formatInputDate(getCell(row, ['対応日', 'responseDate'])),
+  pastedEmail: getText(row, ['過去メール', '過去メール貼付', 'pastedEmail']),
+  emailSummary: getText(row, ['メール要約', 'emailSummary']),
+  nextAction: getText(row, ['次にやること', '次アクション', 'nextAction']),
+  reminderSent: parseSubmitted(getCell(row, ['リマインド済み', 'reminderSent'])),
+  reminderSentDate: formatInputDate(getCell(row, ['リマインド送信日', 'reminderSentDate'])),
+  reminderStaff: getText(row, ['リマインド担当者', 'reminderStaff']),
+  reminderCount: parseReminderCount(getCell(row, ['リマインド回数', 'reminderCount'])),
+  reminderNote: getText(row, ['リマインドメモ', 'reminderNote'])
+});
+
+const readApplicantsFromExcelFile = async (file: File) => {
+  const data = await file.arrayBuffer();
+  const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { raw: true });
+
+  return rows
+    .map((row, index) => createApplicantFromRow(row, index))
+    .filter((applicant) => applicant.name || applicant.email || applicant.birthDate);
+};
+
+const normalizeKeyText = (value: string) => value.trim().toLowerCase();
+
+const getApplicantEmailKey = (applicant: Pick<Applicant, 'email'>) => {
+  const email = normalizeKeyText(applicant.email);
+  return email ? `email:${email}` : '';
+};
+
+const getApplicantNameBirthKey = (applicant: Pick<Applicant, 'name' | 'birthDate'>) => {
+  const name = normalizeKeyText(applicant.name);
+  const birthDate = normalizeKeyText(applicant.birthDate);
+
+  if (!name || !birthDate) return '';
+
+  return `name:${name}|birth:${birthDate}`;
+};
+
+const mergeLatestFormsApplicants = (currentApplicants: Applicant[], latestFormsApplicants: Applicant[]) => {
+  const merged = [...currentApplicants];
+  const indexByEmail = new Map<string, number>();
+  const indexByNameBirth = new Map<string, number>();
+  const usedIds = new Set(currentApplicants.map((applicant) => applicant.id));
+
+  currentApplicants.forEach((applicant, index) => {
+    const emailKey = getApplicantEmailKey(applicant);
+    const nameBirthKey = getApplicantNameBirthKey(applicant);
+
+    if (emailKey) indexByEmail.set(emailKey, index);
+    if (nameBirthKey) indexByNameBirth.set(nameBirthKey, index);
+  });
+
+  let addedCount = 0;
+  let matchedCount = 0;
+  let updatedBasicCount = 0;
+
+  latestFormsApplicants.forEach((latestApplicant, latestIndex) => {
+    const emailKey = getApplicantEmailKey(latestApplicant);
+    const nameBirthKey = getApplicantNameBirthKey(latestApplicant);
+    let existingIndex: number | undefined;
+
+    if (emailKey) {
+      existingIndex = indexByEmail.get(emailKey);
+    }
+
+    if (existingIndex === undefined && nameBirthKey) {
+      existingIndex = indexByNameBirth.get(nameBirthKey);
+    }
+
+    if (existingIndex !== undefined) {
+      const existingApplicant = merged[existingIndex];
+      const updatedApplicant = {
+        ...existingApplicant,
+        name: latestApplicant.name || existingApplicant.name,
+        email: latestApplicant.email || existingApplicant.email,
+        birthDate: latestApplicant.birthDate || existingApplicant.birthDate,
+        nationality: latestApplicant.nationality || existingApplicant.nationality
+      };
+
+      const basicInfoChanged =
+        updatedApplicant.name !== existingApplicant.name ||
+        updatedApplicant.email !== existingApplicant.email ||
+        updatedApplicant.birthDate !== existingApplicant.birthDate ||
+        updatedApplicant.nationality !== existingApplicant.nationality;
+
+      merged[existingIndex] = updatedApplicant;
+      matchedCount += 1;
+      if (basicInfoChanged) updatedBasicCount += 1;
+      return;
+    }
+
+    let newId = latestApplicant.id || `applicant-${currentApplicants.length + latestIndex}`;
+    let suffix = 1;
+    while (usedIds.has(newId)) {
+      newId = `${latestApplicant.id || 'applicant'}-${suffix}`;
+      suffix += 1;
+    }
+
+    const applicantToAdd = {
+      ...latestApplicant,
+      id: newId,
+      passportSubmitted: latestApplicant.passportSubmitted,
+      enrollmentSubmitted: latestApplicant.enrollmentSubmitted,
+      dueDate: latestApplicant.dueDate,
+      oneDriveLink: latestApplicant.oneDriveLink
+    };
+
+    merged.push(applicantToAdd);
+    usedIds.add(newId);
+
+    const addedIndex = merged.length - 1;
+    if (emailKey) indexByEmail.set(emailKey, addedIndex);
+    if (nameBirthKey) indexByNameBirth.set(nameBirthKey, addedIndex);
+    addedCount += 1;
+  });
+
+  return { merged, addedCount, matchedCount, updatedBasicCount };
+};
+
+
 function App() {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [dueDate, setDueDate] = useState('');
@@ -295,6 +434,7 @@ function App() {
   const [selectedApplicantId, setSelectedApplicantId] = useState('');
   const [reminderApplicantId, setReminderApplicantId] = useState('');
   const [reminderStaffInput, setReminderStaffInput] = useState('');
+  const [importMessage, setImportMessage] = useState('');
 
   const selectedApplicant = useMemo(
     () => applicants.find((applicant) => applicant.id === selectedApplicantId) ?? null,
@@ -362,44 +502,50 @@ function App() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { raw: true });
-
-    const next = rows.map((row, index) => ({
-      id: makeId(row, index),
-      name: buildApplicantName(row),
-      email: getText(row, ['E-mail', 'メール', '連絡先メールアドレス', 'email']),
-      birthDate: formatBirthDate(getCell(row, ['Date of Birth (yyyy/MM/dd)', 'Date of Birth', '生年月日', 'birthDate'])),
-      nationality: getText(row, [
-        'Nationality (Corresponds your passport / e.g. JAPAN)',
-        'Nationality',
-        '国籍',
-        'nationality'
-      ]),
-      passportSubmitted: parseSubmitted(getCell(row, ['パスポートコピー', 'パスポートコピー提出', 'passportSubmitted'])),
-      enrollmentSubmitted: parseSubmitted(getCell(row, ['在籍証明書', '在籍証明書提出', 'enrollmentSubmitted'])),
-      dueDate: formatInputDate(getCell(row, ['提出期限', '期日', 'dueDate'])),
-      oneDriveLink: getText(row, ['OneDriveリンク', 'oneDriveLink']),
-      memo: getText(row, ['メモ', 'memo']),
-      specialRequest: getText(row, ['特別リクエスト', '特別なリクエスト', 'specialRequest']),
-      responseDetails: getText(row, ['対応内容', '対応', 'responseDetails']),
-      staff: getText(row, ['担当者', 'staff']),
-      responseDate: formatInputDate(getCell(row, ['対応日', 'responseDate'])),
-      pastedEmail: getText(row, ['過去メール', '過去メール貼付', 'pastedEmail']),
-      emailSummary: getText(row, ['メール要約', 'emailSummary']),
-      nextAction: getText(row, ['次にやること', '次アクション', 'nextAction']),
-      reminderSent: parseSubmitted(getCell(row, ['リマインド済み', 'reminderSent'])),
-      reminderSentDate: formatInputDate(getCell(row, ['リマインド送信日', 'reminderSentDate'])),
-      reminderStaff: getText(row, ['リマインド担当者', 'reminderStaff']),
-      reminderCount: parseReminderCount(getCell(row, ['リマインド回数', 'reminderCount'])),
-      reminderNote: getText(row, ['リマインドメモ', 'reminderNote'])
-    }));
+    const next = await readApplicantsFromExcelFile(file);
 
     setApplicants(next);
     setSelectedApplicantId(next[0]?.id ?? '');
     setReminderApplicantId(next.find((a) => !a.passportSubmitted || !a.enrollmentSubmitted)?.id ?? '');
+    setImportMessage(`正本Excelを読み込みました：${next.length}名。画面上の作業内容はこのExcelの内容で置き換わりました。`);
+    event.target.value = '';
+  };
+
+  const onLatestFormsFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const latestFormsApplicants = await readApplicantsFromExcelFile(file);
+
+    if (!latestFormsApplicants.length) {
+      setImportMessage('MS Forms最新Excelを読み込みましたが、追加できる応募者が見つかりませんでした。');
+      event.target.value = '';
+      return;
+    }
+
+    setApplicants((currentApplicants) => {
+      const { merged, addedCount, matchedCount, updatedBasicCount } = mergeLatestFormsApplicants(
+        currentApplicants,
+        latestFormsApplicants
+      );
+      const nextSelectedApplicantId =
+        selectedApplicantId && merged.some((applicant) => applicant.id === selectedApplicantId)
+          ? selectedApplicantId
+          : merged[0]?.id ?? '';
+      const nextReminderApplicantId =
+        reminderApplicantId && merged.some((applicant) => applicant.id === reminderApplicantId)
+          ? reminderApplicantId
+          : merged.find((applicant) => !applicant.passportSubmitted || !applicant.enrollmentSubmitted)?.id ?? '';
+
+      setSelectedApplicantId(nextSelectedApplicantId);
+      setReminderApplicantId(nextReminderApplicantId);
+      setImportMessage(
+        `MS Forms最新Excelを追加反映しました：新規 ${addedCount}名、既存照合 ${matchedCount}名、基本情報更新 ${updatedBasicCount}名。既存の提出状況・期限・OneDriveリンク・メモ・対応履歴・リマインド履歴は維持しています。`
+      );
+
+      return merged;
+    });
+
     event.target.value = '';
   };
 
@@ -502,8 +648,13 @@ function App() {
 
       <section className="controls">
         <label>
-          応募者Excel:
+          正本Excel:
           <input type="file" accept=".xlsx,.xls,.csv" onChange={onFileChange} />
+        </label>
+
+        <label>
+          MS Forms最新Excelを追加反映:
+          <input type="file" accept=".xlsx,.xls,.csv" onChange={onLatestFormsFileChange} />
         </label>
 
         <label>
@@ -542,6 +693,8 @@ function App() {
           進捗Excelを出力
         </button>
       </section>
+
+      {importMessage && <p className="import-message">{importMessage}</p>}
 
       {!!applicants.length && (
         <section className="summary-cards">
