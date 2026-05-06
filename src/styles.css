@@ -22,3 +22,12 @@ th, td {
 input[type='url'] {
   width: 100%;
 }
+.filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.empty-message {
+  color: #666;
+}
