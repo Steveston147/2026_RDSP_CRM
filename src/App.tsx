@@ -1,3 +1,5 @@
+// FILE: src/App.tsx
+// PATH: src/App.tsx
 import { useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 
@@ -11,6 +13,14 @@ type Applicant = {
   enrollmentSubmitted: boolean;
   dueDate: string;
   oneDriveLink: string;
+  memo: string;
+  specialRequest: string;
+  responseDetails: string;
+  staff: string;
+  responseDate: string;
+  pastedEmail: string;
+  emailSummary: string;
+  nextAction: string;
 };
 
 type StatusFilter = 'all' | 'pending' | 'passportMissing' | 'enrollmentMissing' | 'completed';
@@ -82,11 +92,41 @@ const parseSubmitted = (value: unknown) => {
 const makeId = (row: Record<string, unknown>, index: number) =>
   `${buildApplicantName(row) || getText(row, ['E-mail', 'メール', 'email']) || 'applicant'}-${index}`;
 
+const createNextActionSuggestion = (applicant: Applicant) => {
+  const missingItems: string[] = [];
+
+  if (!applicant.passportSubmitted) missingItems.push('パスポートコピー');
+  if (!applicant.enrollmentSubmitted) missingItems.push('在籍証明書');
+
+  if (!missingItems.length) {
+    if (applicant.specialRequest.trim()) {
+      return '書類は完了しています。特別リクエストの内容を確認し、必要に応じて担当者から回答してください。';
+    }
+
+    return '書類は完了しています。進捗Excelを出力し、必要に応じて最終確認を行ってください。';
+  }
+
+  const dueDateText = applicant.dueDate ? `提出期限（${applicant.dueDate}）` : '提出期限';
+  const requestText = missingItems.join('、');
+
+  if (applicant.oneDriveLink.trim()) {
+    return `${requestText}の提出依頼メールを作成し、OneDriveリンクと${dueDateText}を案内してください。`;
+  }
+
+  return `${requestText}が未提出です。まずOneDriveリンクを設定し、${dueDateText}とあわせて提出依頼メールを送ってください。`;
+};
+
 function App() {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [dueDate, setDueDate] = useState('');
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [selectedApplicantId, setSelectedApplicantId] = useState('');
+
+  const selectedApplicant = useMemo(
+    () => applicants.find((applicant) => applicant.id === selectedApplicantId) ?? null,
+    [applicants, selectedApplicantId]
+  );
 
   const pendingCount = useMemo(
     () => applicants.filter((a) => !a.passportSubmitted || !a.enrollmentSubmitted).length,
@@ -142,10 +182,19 @@ function App() {
       passportSubmitted: parseSubmitted(getCell(row, ['パスポートコピー', 'パスポートコピー提出', 'passportSubmitted'])),
       enrollmentSubmitted: parseSubmitted(getCell(row, ['在籍証明書', '在籍証明書提出', 'enrollmentSubmitted'])),
       dueDate: formatInputDate(getCell(row, ['提出期限', '期日', 'dueDate'])),
-      oneDriveLink: getText(row, ['OneDriveリンク', 'oneDriveLink'])
+      oneDriveLink: getText(row, ['OneDriveリンク', 'oneDriveLink']),
+      memo: getText(row, ['メモ', 'memo']),
+      specialRequest: getText(row, ['特別リクエスト', '特別なリクエスト', 'specialRequest']),
+      responseDetails: getText(row, ['対応内容', '対応', 'responseDetails']),
+      staff: getText(row, ['担当者', 'staff']),
+      responseDate: formatInputDate(getCell(row, ['対応日', 'responseDate'])),
+      pastedEmail: getText(row, ['過去メール', '過去メール貼付', 'pastedEmail']),
+      emailSummary: getText(row, ['メール要約', 'emailSummary']),
+      nextAction: getText(row, ['次にやること', '次アクション', 'nextAction'])
     }));
 
     setApplicants(next);
+    setSelectedApplicantId(next[0]?.id ?? '');
     event.target.value = '';
   };
 
@@ -162,7 +211,15 @@ function App() {
       パスポートコピー: a.passportSubmitted ? '提出済み' : '未提出',
       在籍証明書: a.enrollmentSubmitted ? '提出済み' : '未提出',
       提出期限: a.dueDate,
-      OneDriveリンク: a.oneDriveLink
+      OneDriveリンク: a.oneDriveLink,
+      メモ: a.memo,
+      特別リクエスト: a.specialRequest,
+      対応内容: a.responseDetails,
+      担当者: a.staff,
+      対応日: a.responseDate,
+      過去メール: a.pastedEmail,
+      メール要約: a.emailSummary,
+      次にやること: a.nextAction
     }));
 
     const sheet = XLSX.utils.json_to_sheet(rows);
@@ -173,6 +230,14 @@ function App() {
 
   const applyDueDate = () => {
     setApplicants((prev) => prev.map((a) => ({ ...a, dueDate })));
+  };
+
+  const applySuggestedNextAction = () => {
+    if (!selectedApplicant) return;
+
+    updateApplicant(selectedApplicant.id, {
+      nextAction: createNextActionSuggestion(selectedApplicant)
+    });
   };
 
   return (
@@ -234,6 +299,7 @@ function App() {
             <th>在籍証明書</th>
             <th>提出期限</th>
             <th>OneDriveリンク</th>
+            <th>詳細</th>
           </tr>
         </thead>
         <tbody>
@@ -272,15 +338,134 @@ function App() {
                   onChange={(e) => updateApplicant(a.id, { oneDriveLink: e.target.value })}
                 />
               </td>
+              <td>
+                <button type="button" onClick={() => setSelectedApplicantId(a.id)}>
+                  詳細
+                </button>
+              </td>
             </tr>
           ))}
           {!filteredApplicants.length && (
             <tr>
-              <td colSpan={8}>該当する応募者はいません。</td>
+              <td colSpan={9}>該当する応募者はいません。</td>
             </tr>
           )}
         </tbody>
       </table>
+
+      {selectedApplicant && (
+        <section
+          className="applicant-detail"
+          style={{
+            marginTop: '24px',
+            padding: '16px',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            background: '#fafafa'
+          }}
+        >
+          <h2>{selectedApplicant.name} 詳細</h2>
+
+          <p>
+            <strong>メール：</strong>
+            {selectedApplicant.email || '未入力'}
+          </p>
+          <p>
+            <strong>進捗：</strong>
+            パスポートコピー：{selectedApplicant.passportSubmitted ? '提出済み' : '未提出'} ／
+            在籍証明書：{selectedApplicant.enrollmentSubmitted ? '提出済み' : '未提出'}
+          </p>
+          <p>
+            <strong>次にやることの提案：</strong>
+            {createNextActionSuggestion(selectedApplicant)}
+          </p>
+
+          <button type="button" onClick={applySuggestedNextAction}>
+            提案を「次にやること」へ反映
+          </button>
+
+          <div style={{ display: 'grid', gap: '12px', marginTop: '16px' }}>
+            <label>
+              メモ
+              <textarea
+                rows={3}
+                value={selectedApplicant.memo}
+                onChange={(e) => updateApplicant(selectedApplicant.id, { memo: e.target.value })}
+                style={{ display: 'block', width: '100%' }}
+              />
+            </label>
+
+            <label>
+              特別リクエスト
+              <textarea
+                rows={3}
+                value={selectedApplicant.specialRequest}
+                onChange={(e) => updateApplicant(selectedApplicant.id, { specialRequest: e.target.value })}
+                style={{ display: 'block', width: '100%' }}
+              />
+            </label>
+
+            <label>
+              対応内容
+              <textarea
+                rows={3}
+                value={selectedApplicant.responseDetails}
+                onChange={(e) => updateApplicant(selectedApplicant.id, { responseDetails: e.target.value })}
+                style={{ display: 'block', width: '100%' }}
+              />
+            </label>
+
+            <label>
+              担当者
+              <input
+                type="text"
+                value={selectedApplicant.staff}
+                onChange={(e) => updateApplicant(selectedApplicant.id, { staff: e.target.value })}
+                style={{ display: 'block', width: '100%' }}
+              />
+            </label>
+
+            <label>
+              対応日
+              <input
+                type="date"
+                value={selectedApplicant.responseDate}
+                onChange={(e) => updateApplicant(selectedApplicant.id, { responseDate: e.target.value })}
+              />
+            </label>
+
+            <label>
+              過去メール貼付
+              <textarea
+                rows={6}
+                value={selectedApplicant.pastedEmail}
+                onChange={(e) => updateApplicant(selectedApplicant.id, { pastedEmail: e.target.value })}
+                style={{ display: 'block', width: '100%' }}
+              />
+            </label>
+
+            <label>
+              メール要約
+              <textarea
+                rows={4}
+                value={selectedApplicant.emailSummary}
+                onChange={(e) => updateApplicant(selectedApplicant.id, { emailSummary: e.target.value })}
+                style={{ display: 'block', width: '100%' }}
+              />
+            </label>
+
+            <label>
+              次にやること
+              <textarea
+                rows={4}
+                value={selectedApplicant.nextAction}
+                onChange={(e) => updateApplicant(selectedApplicant.id, { nextAction: e.target.value })}
+                style={{ display: 'block', width: '100%' }}
+              />
+            </label>
+          </div>
+        </section>
+      )}
     </main>
   );
 }
