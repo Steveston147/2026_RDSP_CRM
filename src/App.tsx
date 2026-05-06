@@ -432,12 +432,18 @@ function App() {
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedApplicantId, setSelectedApplicantId] = useState('');
+  const [isApplicantPageOpen, setIsApplicantPageOpen] = useState(false);
   const [reminderApplicantId, setReminderApplicantId] = useState('');
   const [reminderStaffInput, setReminderStaffInput] = useState('');
   const [importMessage, setImportMessage] = useState('');
 
   const selectedApplicant = useMemo(
     () => applicants.find((applicant) => applicant.id === selectedApplicantId) ?? null,
+    [applicants, selectedApplicantId]
+  );
+
+  const selectedApplicantIndex = useMemo(
+    () => applicants.findIndex((applicant) => applicant.id === selectedApplicantId),
     [applicants, selectedApplicantId]
   );
 
@@ -506,6 +512,7 @@ function App() {
 
     setApplicants(next);
     setSelectedApplicantId(next[0]?.id ?? '');
+    setIsApplicantPageOpen(false);
     setReminderApplicantId(next.find((a) => !a.passportSubmitted || !a.enrollmentSubmitted)?.id ?? '');
     setImportMessage(`正本Excelを読み込みました：${next.length}名。画面上の作業内容はこのExcelの内容で置き換わりました。`);
     event.target.value = '';
@@ -601,44 +608,368 @@ function App() {
     });
   };
 
+  const openApplicantPage = (applicantId: string) => {
+    setSelectedApplicantId(applicantId);
+    setIsApplicantPageOpen(true);
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const closeApplicantPage = () => {
+    setIsApplicantPageOpen(false);
+  };
+
   const openReminderForApplicant = (applicantId: string) => {
     setReminderApplicantId(applicantId);
     setSelectedApplicantId(applicantId);
   };
 
-  const copyReminderEmail = async () => {
-    if (!reminderApplicant) return;
-
-    const text = createReminderEmail(reminderApplicant);
+  const copyReminderEmailForApplicant = async (applicant: Applicant) => {
+    const text = createReminderEmail(applicant);
 
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
     }
   };
 
-  const markReminderAsSent = () => {
+  const copyReminderEmail = async () => {
     if (!reminderApplicant) return;
+    await copyReminderEmailForApplicant(reminderApplicant);
+  };
 
+  const markReminderAsSentForApplicant = (applicant: Applicant) => {
     const today = getTodayInputValue();
-    const staff = reminderStaffInput.trim() || reminderApplicant.reminderStaff || reminderApplicant.staff;
-    const nextCount = reminderApplicant.reminderCount + 1;
-    const missingItems = getMissingDocuments(reminderApplicant)
+    const staff = reminderStaffInput.trim() || applicant.reminderStaff || applicant.staff;
+    const nextCount = applicant.reminderCount + 1;
+    const missingItems = getMissingDocuments(applicant)
       .map((item) => item.jp)
       .join('、');
-    const deadlineInfo = getDeadlineLabel(reminderApplicant);
+    const deadlineInfo = getDeadlineLabel(applicant);
+    const reminderEmail = createReminderEmail(applicant);
     const logLine = `${today} ${staff ? `${staff}：` : ''}リマインドメール送信（${nextCount}回目／未提出：${missingItems}／${deadlineInfo}）`;
+    const emailLog = [
+      '---',
+      `Date: ${today}`,
+      'Type: Sent reminder email',
+      `Staff: ${staff || '未入力'}`,
+      'Subject: Reminder for RDSP required documents',
+      `Missing documents: ${missingItems || 'なし'}`,
+      `Deadline: ${applicant.dueDate || '未設定'} (${deadlineInfo})`,
+      '',
+      'Body:',
+      reminderEmail
+    ].join('\n');
+    const summaryLine = `${today} ${staff ? `${staff}：` : ''}未提出書類（${missingItems || 'なし'}）のリマインドメールを送信。`;
 
-    updateApplicant(reminderApplicant.id, {
+    updateApplicant(applicant.id, {
       reminderSent: true,
       reminderSentDate: today,
       reminderStaff: staff,
       reminderCount: nextCount,
-      reminderNote: appendLine(reminderApplicant.reminderNote, logLine),
-      staff: staff || reminderApplicant.staff,
+      reminderNote: appendLine(applicant.reminderNote, logLine),
+      staff: staff || applicant.staff,
       responseDate: today,
-      responseDetails: appendLine(reminderApplicant.responseDetails, logLine),
+      responseDetails: appendLine(applicant.responseDetails, logLine),
+      pastedEmail: appendLine(applicant.pastedEmail, emailLog),
+      emailSummary: appendLine(applicant.emailSummary, summaryLine),
       nextAction: '返信待ち。未提出のまま数日経過した場合は、再リマインドまたは個別確認を行う。'
     });
+  };
+
+  const markReminderAsSent = () => {
+    if (!reminderApplicant) return;
+    markReminderAsSentForApplicant(reminderApplicant);
+  };
+
+  const renderApplicantCrmPage = (applicant: Applicant) => {
+    const missingDocuments = getMissingDocuments(applicant);
+    const applicantNumber = selectedApplicantIndex >= 0 ? selectedApplicantIndex + 1 : '-';
+    const hasAnyCommunication =
+      applicant.responseDetails.trim() ||
+      applicant.reminderNote.trim() ||
+      applicant.pastedEmail.trim() ||
+      applicant.emailSummary.trim();
+
+    return (
+      <section className="crm-page">
+        <div className="crm-topbar">
+          <button type="button" onClick={closeApplicantPage}>
+            ← 応募者一覧へ戻る
+          </button>
+          <button type="button" onClick={() => openReminderForApplicant(applicant.id)}>
+            この学生をリマインド対象にする
+          </button>
+        </div>
+
+        <section className={`crm-hero deadline-row-${getDeadlineStatus(applicant)}`}>
+          <div>
+            <p className="crm-kicker">Applicant #{applicantNumber}</p>
+            <h2>{applicant.name || '氏名未入力'}</h2>
+            <p className="crm-email">{applicant.email || 'メール未入力'}</p>
+          </div>
+          <div className="crm-hero-badges">
+            <span className={getDeadlineClassName(applicant)}>{getDeadlineLabel(applicant)}</span>
+            <span className={`crm-completion-pill ${isCompleted(applicant) ? 'is-complete' : 'is-pending'}`}>
+              {isCompleted(applicant) ? '書類完了' : '未提出あり'}
+            </span>
+          </div>
+        </section>
+
+        <div className="crm-meta-grid">
+          <div>
+            <span>生年月日</span>
+            <strong>{applicant.birthDate || '未入力'}</strong>
+          </div>
+          <div>
+            <span>国籍</span>
+            <strong>{applicant.nationality || '未入力'}</strong>
+          </div>
+          <div>
+            <span>提出期限</span>
+            <strong>{applicant.dueDate || '未設定'}</strong>
+          </div>
+          <div>
+            <span>OneDrive</span>
+            <strong>{applicant.oneDriveLink.trim() ? '設定済み' : '未設定'}</strong>
+          </div>
+          <div>
+            <span>最終対応日</span>
+            <strong>{applicant.responseDate || applicant.reminderSentDate || '未入力'}</strong>
+          </div>
+          <div>
+            <span>担当者</span>
+            <strong>{applicant.staff || applicant.reminderStaff || '未入力'}</strong>
+          </div>
+        </div>
+
+        <div className="crm-layout">
+          <div className="crm-main">
+            <section className="crm-section-card">
+              <h3>提出状況</h3>
+              <div className="crm-status-board">
+                <label className="crm-check-card">
+                  <input
+                    type="checkbox"
+                    checked={applicant.passportSubmitted}
+                    onChange={(e) => updateApplicant(applicant.id, { passportSubmitted: e.target.checked })}
+                  />
+                  <span>パスポートコピー</span>
+                  <strong>{applicant.passportSubmitted ? '提出済み' : '未提出'}</strong>
+                </label>
+                <label className="crm-check-card">
+                  <input
+                    type="checkbox"
+                    checked={applicant.enrollmentSubmitted}
+                    onChange={(e) => updateApplicant(applicant.id, { enrollmentSubmitted: e.target.checked })}
+                  />
+                  <span>在籍証明書</span>
+                  <strong>{applicant.enrollmentSubmitted ? '提出済み' : '未提出'}</strong>
+                </label>
+                <label>
+                  提出期限
+                  <input
+                    type="date"
+                    value={applicant.dueDate}
+                    onChange={(e) => updateApplicant(applicant.id, { dueDate: e.target.value })}
+                  />
+                </label>
+                <label>
+                  OneDriveリンク
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={applicant.oneDriveLink}
+                    onChange={(e) => updateApplicant(applicant.id, { oneDriveLink: e.target.value })}
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="crm-section-card">
+              <h3>やり取り履歴・メール記録</h3>
+              {hasAnyCommunication ? (
+                <div className="crm-timeline">
+                  {applicant.responseDetails.trim() && (
+                    <article className="crm-timeline-item">
+                      <span>対応内容</span>
+                      <pre>{applicant.responseDetails}</pre>
+                    </article>
+                  )}
+                  {applicant.reminderNote.trim() && (
+                    <article className="crm-timeline-item">
+                      <span>リマインド履歴</span>
+                      <pre>{applicant.reminderNote}</pre>
+                    </article>
+                  )}
+                  {applicant.emailSummary.trim() && (
+                    <article className="crm-timeline-item">
+                      <span>メール要約</span>
+                      <pre>{applicant.emailSummary}</pre>
+                    </article>
+                  )}
+                  {applicant.pastedEmail.trim() && (
+                    <article className="crm-timeline-item">
+                      <span>メール本文・貼付記録</span>
+                      <pre>{applicant.pastedEmail}</pre>
+                    </article>
+                  )}
+                </div>
+              ) : (
+                <p className="empty-note">まだメール履歴や対応記録はありません。</p>
+              )}
+            </section>
+
+            <section className="crm-section-card">
+              <h3>記録・修正</h3>
+              <div className="crm-form-grid">
+                <label>
+                  対応内容
+                  <textarea
+                    rows={4}
+                    value={applicant.responseDetails}
+                    onChange={(e) => updateApplicant(applicant.id, { responseDetails: e.target.value })}
+                  />
+                </label>
+                <label>
+                  リマインドメモ
+                  <textarea
+                    rows={4}
+                    value={applicant.reminderNote}
+                    onChange={(e) => updateApplicant(applicant.id, { reminderNote: e.target.value })}
+                  />
+                </label>
+                <label>
+                  過去メール・送信メール本文
+                  <textarea
+                    rows={8}
+                    value={applicant.pastedEmail}
+                    onChange={(e) => updateApplicant(applicant.id, { pastedEmail: e.target.value })}
+                  />
+                </label>
+                <label>
+                  メール要約
+                  <textarea
+                    rows={5}
+                    value={applicant.emailSummary}
+                    onChange={(e) => updateApplicant(applicant.id, { emailSummary: e.target.value })}
+                  />
+                </label>
+              </div>
+            </section>
+          </div>
+
+          <aside className="crm-side">
+            <section className="crm-section-card crm-next-action-card">
+              <h3>次にやること</h3>
+              <p className="crm-suggestion">{createNextActionSuggestion(applicant)}</p>
+              <button type="button" onClick={applySuggestedNextAction}>
+                提案を反映
+              </button>
+              <textarea
+                rows={5}
+                value={applicant.nextAction}
+                onChange={(e) => updateApplicant(applicant.id, { nextAction: e.target.value })}
+              />
+            </section>
+
+            <section className="crm-section-card">
+              <h3>メモ・特徴</h3>
+              <label>
+                メモ
+                <textarea
+                  rows={5}
+                  value={applicant.memo}
+                  onChange={(e) => updateApplicant(applicant.id, { memo: e.target.value })}
+                />
+              </label>
+              <label>
+                特別リクエスト
+                <textarea
+                  rows={5}
+                  value={applicant.specialRequest}
+                  onChange={(e) => updateApplicant(applicant.id, { specialRequest: e.target.value })}
+                />
+              </label>
+            </section>
+
+            <section className="crm-section-card">
+              <h3>担当・対応日</h3>
+              <label>
+                担当者
+                <input
+                  type="text"
+                  value={applicant.staff}
+                  onChange={(e) => updateApplicant(applicant.id, { staff: e.target.value })}
+                />
+              </label>
+              <label>
+                対応日
+                <input
+                  type="date"
+                  value={applicant.responseDate}
+                  onChange={(e) => updateApplicant(applicant.id, { responseDate: e.target.value })}
+                />
+              </label>
+              <label>
+                リマインド送信日
+                <input
+                  type="date"
+                  value={applicant.reminderSentDate}
+                  onChange={(e) => updateApplicant(applicant.id, { reminderSentDate: e.target.value })}
+                />
+              </label>
+              <label>
+                リマインド担当者
+                <input
+                  type="text"
+                  value={applicant.reminderStaff}
+                  onChange={(e) => updateApplicant(applicant.id, { reminderStaff: e.target.value })}
+                />
+              </label>
+              <label>
+                リマインド回数
+                <input
+                  type="number"
+                  min="0"
+                  value={applicant.reminderCount}
+                  onChange={(e) => updateApplicant(applicant.id, { reminderCount: Number(e.target.value) || 0 })}
+                />
+              </label>
+            </section>
+
+            {!isCompleted(applicant) && (
+              <section className="crm-section-card">
+                <h3>リマインド文面</h3>
+                <p>
+                  未提出：
+                  {missingDocuments.length ? missingDocuments.map((item) => item.jp).join('、') : 'なし'}
+                </p>
+                <textarea readOnly rows={10} value={createReminderEmail(applicant)} className="reminder-textarea" />
+                <div className="reminder-actions">
+                  <label>
+                    送信担当者:
+                    <input
+                      type="text"
+                      placeholder="例：田中"
+                      value={reminderStaffInput}
+                      onChange={(e) => setReminderStaffInput(e.target.value)}
+                    />
+                  </label>
+                  <button type="button" onClick={() => copyReminderEmailForApplicant(applicant)}>
+                    文面をコピー
+                  </button>
+                  <button type="button" onClick={() => markReminderAsSentForApplicant(applicant)}>
+                    リマインド送信済みにする
+                  </button>
+                </div>
+              </section>
+            )}
+          </aside>
+        </div>
+      </section>
+    );
   };
 
   return (
@@ -728,358 +1059,229 @@ function App() {
       <p>未完了：{pendingCount}名 / 全体：{applicants.length}名</p>
       <p>表示中：{filteredApplicants.length}名</p>
 
-      {!!applicants.length && urgentApplicants.length > 0 && (
-        <section className="urgent-panel">
-          <h2>優先確認リスト</h2>
-          <p>期限超過または期限まで7日以内の未完了者です。</p>
-          <div className="urgent-list">
-            {urgentApplicants.slice(0, 10).map((applicant) => (
-              <button
-                key={applicant.id}
-                type="button"
-                className={`urgent-item deadline-row-${getDeadlineStatus(applicant)}`}
-                onClick={() => openReminderForApplicant(applicant.id)}
-              >
-                <strong>{applicant.name || '氏名未入力'}</strong>
-                <span>{getDeadlineLabel(applicant)}</span>
-                <small>{getMissingDocuments(applicant).map((item) => item.jp).join('、')}</small>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {!!applicants.length && (
-        <section className="pending-reminders">
-          <h2>未提出者リスト・リマインド文面</h2>
-
-          {pendingApplicants.length ? (
-            <>
-              <p>未提出者：{pendingApplicants.length}名</p>
-
-              <div className="reminder-grid">
-                <div className="reminder-list">
-                  {pendingApplicants.map((applicant) => {
-                    const missingItems = getMissingDocuments(applicant).map((item) => item.jp);
-
-                    return (
-                      <div
-                        key={applicant.id}
-                        className={`reminder-card ${reminderApplicant?.id === applicant.id ? 'is-selected' : ''}`}
-                      >
-                        <div className="reminder-card-header">
-                          <strong>{applicant.name || '氏名未入力'}</strong>
-                          <span className={getDeadlineClassName(applicant)}>{getDeadlineLabel(applicant)}</span>
-                        </div>
-                        <p>未提出：{missingItems.join('、')}</p>
-                        <p>
-                          期限：{applicant.dueDate || '未設定'} ／ OneDrive：
-                          {applicant.oneDriveLink.trim() ? '設定済み' : '未設定'}
-                        </p>
-                        <p>
-                          リマインド：
-                          {applicant.reminderCount > 0
-                            ? `${applicant.reminderCount}回（最終：${applicant.reminderSentDate || '日付未入力'}）`
-                            : '未送信'}
-                        </p>
-                        <button type="button" onClick={() => openReminderForApplicant(applicant.id)}>
-                          文面を表示
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div>
-                  {reminderApplicant ? (
-                    <>
-                      <h3>
-                        {reminderApplicant.name} 宛リマインド文面{' '}
-                        <span className={getDeadlineClassName(reminderApplicant)}>{getDeadlineLabel(reminderApplicant)}</span>
-                      </h3>
-                      <textarea
-                        readOnly
-                        rows={14}
-                        value={createReminderEmail(reminderApplicant)}
-                        className="reminder-textarea"
-                      />
-
-                      <div className="reminder-actions">
-                        <label>
-                          送信担当者:
-                          <input
-                            type="text"
-                            placeholder="例：田中"
-                            value={reminderStaffInput}
-                            onChange={(e) => setReminderStaffInput(e.target.value)}
-                          />
-                        </label>
-                        <button type="button" onClick={copyReminderEmail}>
-                          文面をコピー
-                        </button>
-                        <button type="button" onClick={markReminderAsSent}>
-                          リマインド送信済みにする
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateApplicant(reminderApplicant.id, {
-                              nextAction: createNextActionSuggestion(reminderApplicant)
-                            })
-                          }
-                        >
-                          次にやることへ反映
-                        </button>
-                      </div>
-
-                      <p className="reminder-record">
-                        記録：{reminderApplicant.reminderCount}回 ／ 最終送信日：
-                        {reminderApplicant.reminderSentDate || '未送信'} ／ 担当者：
-                        {reminderApplicant.reminderStaff || '未入力'}
-                      </p>
-
-                      {reminderApplicant.reminderNote && (
-                        <textarea readOnly rows={4} value={reminderApplicant.reminderNote} className="reminder-note" />
-                      )}
-                    </>
-                  ) : (
-                    <p>左の未提出者から文面を表示する応募者を選んでください。</p>
-                  )}
-                </div>
+      {isApplicantPageOpen && selectedApplicant ? (
+        renderApplicantCrmPage(selectedApplicant)
+      ) : (
+        <>
+          {!!applicants.length && urgentApplicants.length > 0 && (
+            <section className="urgent-panel">
+              <h2>優先確認リスト</h2>
+              <p>期限超過または期限まで7日以内の未完了者です。</p>
+              <div className="urgent-list">
+                {urgentApplicants.slice(0, 10).map((applicant) => (
+                  <button
+                    key={applicant.id}
+                    type="button"
+                    className={`urgent-item deadline-row-${getDeadlineStatus(applicant)}`}
+                    onClick={() => openReminderForApplicant(applicant.id)}
+                  >
+                    <strong>{applicant.name || '氏名未入力'}</strong>
+                    <span>{getDeadlineLabel(applicant)}</span>
+                    <small>{getMissingDocuments(applicant).map((item) => item.jp).join('、')}</small>
+                  </button>
+                ))}
               </div>
-            </>
-          ) : (
-            <p>未提出者はいません。全員の書類提出が完了しています。</p>
+            </section>
           )}
-        </section>
-      )}
 
-      <table>
-        <thead>
-          <tr>
-            <th>氏名</th>
-            <th>メール</th>
-            <th>生年月日</th>
-            <th>国籍</th>
-            <th>パスポートコピー</th>
-            <th>在籍証明書</th>
-            <th>提出期限</th>
-            <th>期限状況</th>
-            <th>OneDriveリンク</th>
-            <th>リマインド</th>
-            <th>詳細</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredApplicants.map((a) => (
-            <tr key={a.id} className={`deadline-row-${getDeadlineStatus(a)}`}>
-              <td>{a.name}</td>
-              <td>{a.email}</td>
-              <td>{a.birthDate}</td>
-              <td>{a.nationality}</td>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={a.passportSubmitted}
-                  onChange={(e) => updateApplicant(a.id, { passportSubmitted: e.target.checked })}
-                />
-              </td>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={a.enrollmentSubmitted}
-                  onChange={(e) => updateApplicant(a.id, { enrollmentSubmitted: e.target.checked })}
-                />
-              </td>
-              <td>
-                <input
-                  type="date"
-                  value={a.dueDate}
-                  onChange={(e) => updateApplicant(a.id, { dueDate: e.target.value })}
-                />
-              </td>
-              <td>
-                <span className={getDeadlineClassName(a)}>{getDeadlineLabel(a)}</span>
-              </td>
-              <td>
-                <input
-                  type="url"
-                  placeholder="https://..."
-                  value={a.oneDriveLink}
-                  onChange={(e) => updateApplicant(a.id, { oneDriveLink: e.target.value })}
-                />
-              </td>
-              <td>
-                {a.reminderCount > 0 ? (
-                  <>
-                    済 {a.reminderCount}回
-                    <br />
-                    {a.reminderSentDate}
-                  </>
-                ) : (
-                  '未'
-                )}
-              </td>
-              <td>
-                <button type="button" onClick={() => setSelectedApplicantId(a.id)}>
-                  詳細
-                </button>
-              </td>
-            </tr>
-          ))}
-          {!filteredApplicants.length && (
-            <tr>
-              <td colSpan={11}>該当する応募者はいません。</td>
-            </tr>
+          {!!applicants.length && (
+            <section className="pending-reminders">
+              <h2>未提出者リスト・リマインド文面</h2>
+
+              {pendingApplicants.length ? (
+                <>
+                  <p>未提出者：{pendingApplicants.length}名</p>
+
+                  <div className="reminder-grid">
+                    <div className="reminder-list">
+                      {pendingApplicants.map((applicant) => {
+                        const missingItems = getMissingDocuments(applicant).map((item) => item.jp);
+
+                        return (
+                          <div
+                            key={applicant.id}
+                            className={`reminder-card ${reminderApplicant?.id === applicant.id ? 'is-selected' : ''}`}
+                          >
+                            <div className="reminder-card-header">
+                              <strong>{applicant.name || '氏名未入力'}</strong>
+                              <span className={getDeadlineClassName(applicant)}>{getDeadlineLabel(applicant)}</span>
+                            </div>
+                            <p>未提出：{missingItems.join('、')}</p>
+                            <p>
+                              期限：{applicant.dueDate || '未設定'} ／ OneDrive：
+                              {applicant.oneDriveLink.trim() ? '設定済み' : '未設定'}
+                            </p>
+                            <p>
+                              リマインド：
+                              {applicant.reminderCount > 0
+                                ? `${applicant.reminderCount}回（最終：${applicant.reminderSentDate || '日付未入力'}）`
+                                : '未送信'}
+                            </p>
+                            <button type="button" onClick={() => openReminderForApplicant(applicant.id)}>
+                              文面を表示
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div>
+                      {reminderApplicant ? (
+                        <>
+                          <h3>
+                            {reminderApplicant.name} 宛リマインド文面{' '}
+                            <span className={getDeadlineClassName(reminderApplicant)}>
+                              {getDeadlineLabel(reminderApplicant)}
+                            </span>
+                          </h3>
+                          <textarea
+                            readOnly
+                            rows={14}
+                            value={createReminderEmail(reminderApplicant)}
+                            className="reminder-textarea"
+                          />
+
+                          <div className="reminder-actions">
+                            <label>
+                              送信担当者:
+                              <input
+                                type="text"
+                                placeholder="例：田中"
+                                value={reminderStaffInput}
+                                onChange={(e) => setReminderStaffInput(e.target.value)}
+                              />
+                            </label>
+                            <button type="button" onClick={copyReminderEmail}>
+                              文面をコピー
+                            </button>
+                            <button type="button" onClick={markReminderAsSent}>
+                              リマインド送信済みにする
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateApplicant(reminderApplicant.id, {
+                                  nextAction: createNextActionSuggestion(reminderApplicant)
+                                })
+                              }
+                            >
+                              次にやることへ反映
+                            </button>
+                          </div>
+
+                          <p className="reminder-record">
+                            記録：{reminderApplicant.reminderCount}回 ／ 最終送信日：
+                            {reminderApplicant.reminderSentDate || '未送信'} ／ 担当者：
+                            {reminderApplicant.reminderStaff || '未入力'}
+                          </p>
+
+                          {reminderApplicant.reminderNote && (
+                            <textarea readOnly rows={4} value={reminderApplicant.reminderNote} className="reminder-note" />
+                          )}
+                        </>
+                      ) : (
+                        <p>左の未提出者から文面を表示する応募者を選んでください。</p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <p>未提出者はいません。全員の書類提出が完了しています。</p>
+              )}
+            </section>
           )}
-        </tbody>
-      </table>
 
-      {selectedApplicant && (
-        <section className="applicant-detail">
-          <h2>{selectedApplicant.name} 詳細</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>氏名</th>
+                <th>メール</th>
+                <th>生年月日</th>
+                <th>国籍</th>
+                <th>パスポートコピー</th>
+                <th>在籍証明書</th>
+                <th>提出期限</th>
+                <th>期限状況</th>
+                <th>OneDriveリンク</th>
+                <th>リマインド</th>
+                <th>詳細</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredApplicants.map((a) => {
+                const applicantNumber = applicants.findIndex((applicant) => applicant.id === a.id) + 1;
 
-          <p>
-            <strong>メール：</strong>
-            {selectedApplicant.email || '未入力'}
-          </p>
-          <p>
-            <strong>進捗：</strong>
-            パスポートコピー：{selectedApplicant.passportSubmitted ? '提出済み' : '未提出'} ／
-            在籍証明書：{selectedApplicant.enrollmentSubmitted ? '提出済み' : '未提出'}
-          </p>
-          <p>
-            <strong>期限状況：</strong>
-            <span className={getDeadlineClassName(selectedApplicant)}>{getDeadlineLabel(selectedApplicant)}</span>
-          </p>
-          <p>
-            <strong>リマインド：</strong>
-            {selectedApplicant.reminderCount > 0
-              ? `${selectedApplicant.reminderCount}回送信済み（最終：${selectedApplicant.reminderSentDate || '日付未入力'}／担当：${selectedApplicant.reminderStaff || '未入力'}）`
-              : '未送信'}
-          </p>
-          <p>
-            <strong>次にやることの提案：</strong>
-            {createNextActionSuggestion(selectedApplicant)}
-          </p>
-
-          <button type="button" onClick={applySuggestedNextAction}>
-            提案を「次にやること」へ反映
-          </button>
-
-          <div>
-            <label>
-              メモ
-              <textarea
-                rows={3}
-                value={selectedApplicant.memo}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { memo: e.target.value })}
-              />
-            </label>
-
-            <label>
-              特別リクエスト
-              <textarea
-                rows={3}
-                value={selectedApplicant.specialRequest}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { specialRequest: e.target.value })}
-              />
-            </label>
-
-            <label>
-              対応内容
-              <textarea
-                rows={3}
-                value={selectedApplicant.responseDetails}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { responseDetails: e.target.value })}
-              />
-            </label>
-
-            <label>
-              担当者
-              <input
-                type="text"
-                value={selectedApplicant.staff}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { staff: e.target.value })}
-              />
-            </label>
-
-            <label>
-              対応日
-              <input
-                type="date"
-                value={selectedApplicant.responseDate}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { responseDate: e.target.value })}
-              />
-            </label>
-
-            <label>
-              リマインド送信日
-              <input
-                type="date"
-                value={selectedApplicant.reminderSentDate}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { reminderSentDate: e.target.value })}
-              />
-            </label>
-
-            <label>
-              リマインド担当者
-              <input
-                type="text"
-                value={selectedApplicant.reminderStaff}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { reminderStaff: e.target.value })}
-              />
-            </label>
-
-            <label>
-              リマインド回数
-              <input
-                type="number"
-                min="0"
-                value={selectedApplicant.reminderCount}
-                onChange={(e) =>
-                  updateApplicant(selectedApplicant.id, { reminderCount: Number(e.target.value) || 0 })
-                }
-              />
-            </label>
-
-            <label>
-              リマインドメモ
-              <textarea
-                rows={4}
-                value={selectedApplicant.reminderNote}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { reminderNote: e.target.value })}
-              />
-            </label>
-
-            <label>
-              過去メール貼付
-              <textarea
-                rows={6}
-                value={selectedApplicant.pastedEmail}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { pastedEmail: e.target.value })}
-              />
-            </label>
-
-            <label>
-              メール要約
-              <textarea
-                rows={4}
-                value={selectedApplicant.emailSummary}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { emailSummary: e.target.value })}
-              />
-            </label>
-
-            <label>
-              次にやること
-              <textarea
-                rows={4}
-                value={selectedApplicant.nextAction}
-                onChange={(e) => updateApplicant(selectedApplicant.id, { nextAction: e.target.value })}
-              />
-            </label>
-          </div>
-        </section>
+                return (
+                  <tr key={a.id} className={`deadline-row-${getDeadlineStatus(a)}`}>
+                    <td>{applicantNumber || '-'}</td>
+                    <td>
+                      <button type="button" className="applicant-name-button" onClick={() => openApplicantPage(a.id)}>
+                        {a.name || '氏名未入力'}
+                      </button>
+                    </td>
+                    <td>{a.email}</td>
+                    <td>{a.birthDate}</td>
+                    <td>{a.nationality}</td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={a.passportSubmitted}
+                        onChange={(e) => updateApplicant(a.id, { passportSubmitted: e.target.checked })}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={a.enrollmentSubmitted}
+                        onChange={(e) => updateApplicant(a.id, { enrollmentSubmitted: e.target.checked })}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="date"
+                        value={a.dueDate}
+                        onChange={(e) => updateApplicant(a.id, { dueDate: e.target.value })}
+                      />
+                    </td>
+                    <td>
+                      <span className={getDeadlineClassName(a)}>{getDeadlineLabel(a)}</span>
+                    </td>
+                    <td>
+                      <input
+                        type="url"
+                        placeholder="https://..."
+                        value={a.oneDriveLink}
+                        onChange={(e) => updateApplicant(a.id, { oneDriveLink: e.target.value })}
+                      />
+                    </td>
+                    <td>
+                      {a.reminderCount > 0 ? (
+                        <>
+                          済 {a.reminderCount}回
+                          <br />
+                          {a.reminderSentDate}
+                        </>
+                      ) : (
+                        '未'
+                      )}
+                    </td>
+                    <td>
+                      <button type="button" onClick={() => openApplicantPage(a.id)}>
+                        個人ページ
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {!filteredApplicants.length && (
+                <tr>
+                  <td colSpan={12}>該当する応募者はいません。</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </>
       )}
     </main>
   );
