@@ -86,6 +86,40 @@ const getTodayInputValue = () => {
     .join('-');
 };
 
+const getDateTimeParts = (date = new Date()) => {
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+
+  return { year, month, day, hour, minute };
+};
+
+const getExcelExportDateTimeText = (date = new Date()) => {
+  const { year, month, day, hour, minute } = getDateTimeParts(date);
+  return `${year}/${month}/${day} ${hour}:${minute}`;
+};
+
+const getExcelExportTimestamp = (date = new Date()) => {
+  const { year, month, day, hour, minute } = getDateTimeParts(date);
+  return `${year}${month}${day}_${hour}${minute}`;
+};
+
+const sanitizeFileNamePart = (value: string) =>
+  value
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, '')
+    .replace(/\s+/g, '_')
+    .slice(0, 40);
+
+const createExportFileName = (operatorName: string, date = new Date()) => {
+  const timestamp = getExcelExportTimestamp(date);
+  const safeOperatorName = sanitizeFileNamePart(operatorName);
+
+  return `RDSP_Applicant_Status_${timestamp}${safeOperatorName ? `_${safeOperatorName}` : ''}.xlsx`;
+};
+
 const createInitialCommunicationDraft = (): CommunicationDraft => ({
   date: getTodayInputValue(),
   type: 'メール受信',
@@ -490,6 +524,7 @@ const mergeLatestFormsApplicants = (currentApplicants: Applicant[], latestFormsA
 function App() {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [dueDate, setDueDate] = useState('');
+  const [operatorName, setOperatorName] = useState('');
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedApplicantId, setSelectedApplicantId] = useState('');
@@ -508,6 +543,8 @@ function App() {
     () => applicants.findIndex((applicant) => applicant.id === selectedApplicantId),
     [applicants, selectedApplicantId]
   );
+
+  const exportFileNamePreview = useMemo(() => createExportFileName(operatorName), [operatorName]);
 
   const pendingApplicants = useMemo(
     () => applicants.filter((a) => !a.passportSubmitted || !a.enrollmentSubmitted),
@@ -623,6 +660,11 @@ function App() {
   };
 
   const exportStatus = () => {
+    const exportedAt = new Date();
+    const exportDateTimeText = getExcelExportDateTimeText(exportedAt);
+    const exportOperatorName = operatorName.trim();
+    const fileName = createExportFileName(exportOperatorName, exportedAt);
+
     const rows = applicants.map((a) => ({
       氏名: a.name,
       メール: a.email,
@@ -646,13 +688,32 @@ function App() {
       リマインド送信日: a.reminderSentDate,
       リマインド担当者: a.reminderStaff,
       リマインド回数: a.reminderCount,
-      リマインドメモ: a.reminderNote
+      リマインドメモ: a.reminderNote,
+      出力作業者: exportOperatorName,
+      出力日時: exportDateTimeText
     }));
 
+    const exportInfoRows = [
+      { 項目: '出力日時', 内容: exportDateTimeText },
+      { 項目: '出力作業者', 内容: exportOperatorName || '未入力' },
+      { 項目: '応募者数', 内容: `${applicants.length}名` },
+      { 項目: '未完了', 内容: `${pendingCount}名` },
+      { 項目: '期限超過', 内容: `${overdueCount}名` },
+      { 項目: '期限間近', 内容: `${soonCount}名` },
+      { 項目: '期限未設定', 内容: `${unsetDueDateCount}名` },
+      { 項目: '完了', 内容: `${completedCount}名` }
+    ];
+
     const sheet = XLSX.utils.json_to_sheet(rows);
+    const exportInfoSheet = XLSX.utils.json_to_sheet(exportInfoRows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, sheet, 'status');
-    XLSX.writeFile(wb, 'rdsp_applicant_status.xlsx');
+    XLSX.utils.book_append_sheet(wb, exportInfoSheet, 'export_info');
+    XLSX.writeFile(wb, fileName);
+
+    setImportMessage(
+      `進捗Excelを出力しました：${fileName}（作業者：${exportOperatorName || '未入力'}／出力日時：${exportDateTimeText}）`
+    );
   };
 
   const applyDueDate = () => {
@@ -677,7 +738,7 @@ function App() {
     setSelectedApplicantId(applicantId);
     setCommunicationDraft({
       ...createInitialCommunicationDraft(),
-      staff: applicant?.staff || applicant?.reminderStaff || reminderStaffInput
+      staff: applicant?.staff || applicant?.reminderStaff || reminderStaffInput || operatorName
     });
     setIsApplicantPageOpen(true);
 
@@ -723,7 +784,7 @@ function App() {
 
     const recordText = createCommunicationRecordText(communicationDraft, applicant);
     const summaryLine = createCommunicationSummaryLine(communicationDraft, applicant);
-    const staff = communicationDraft.staff.trim() || applicant.staff || applicant.reminderStaff;
+    const staff = communicationDraft.staff.trim() || operatorName.trim() || applicant.staff || applicant.reminderStaff;
     const date = communicationDraft.date || getTodayInputValue();
     const isEmailRecord = communicationDraft.type === 'メール送信' || communicationDraft.type === 'メール受信';
     const emailRecord = isEmailRecord ? recordText : '';
@@ -746,7 +807,7 @@ function App() {
 
   const markReminderAsSentForApplicant = (applicant: Applicant) => {
     const today = getTodayInputValue();
-    const staff = reminderStaffInput.trim() || applicant.reminderStaff || applicant.staff;
+    const staff = reminderStaffInput.trim() || operatorName.trim() || applicant.reminderStaff || applicant.staff;
     const nextCount = applicant.reminderCount + 1;
     const missingItems = getMissingDocuments(applicant)
       .map((item) => item.jp)
@@ -1157,7 +1218,7 @@ function App() {
                     送信担当者:
                     <input
                       type="text"
-                      placeholder="例：田中"
+                      placeholder="例：田中（空欄なら作業者名）"
                       value={reminderStaffInput}
                       onChange={(e) => setReminderStaffInput(e.target.value)}
                     />
@@ -1218,6 +1279,18 @@ function App() {
           共通提出期限:
           <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </label>
+
+        <label>
+          作業者名:
+          <input
+            type="text"
+            placeholder="例：Tanaka"
+            value={operatorName}
+            onChange={(e) => setOperatorName(e.target.value)}
+          />
+        </label>
+
+        <span className="export-file-name-preview">出力名：{exportFileNamePreview}</span>
 
         <button onClick={applyDueDate} disabled={!applicants.length || !dueDate}>
           全員に期日を適用
