@@ -1258,7 +1258,7 @@ function App() {
 
         <div className="crm-layout">
           <div className="crm-main">
-            <section className="crm-section-card">
+            <section className="crm-section-card print-section-documents">
               <h3>提出状況</h3>
               <div className="crm-status-board">
                 {documentDefinitions.map((definition) => (
@@ -1294,7 +1294,7 @@ function App() {
               </div>
             </section>
 
-            <section className="crm-section-card visa-section-card">
+            <section className="crm-section-card visa-section-card print-section-visa">
               <h3>ビザ確認・送付管理</h3>
               <p className="empty-note">国籍によりビザ支援書類が必要かどうかを職員側で確認し、送付したら送付済みとして記録します。</p>
               <div className="crm-status-board">
@@ -1374,7 +1374,7 @@ function App() {
               </div>
             </section>
 
-            <section className="crm-section-card">
+            <section className="crm-section-card print-section-confirmations">
               <h3>確認事項・食事制限</h3>
               <div className="crm-status-board">
                 {confirmationDefinitions.map((definition) => (
@@ -1479,7 +1479,7 @@ function App() {
               </div>
             </section>
 
-            <section className="crm-section-card">
+            <section className="crm-section-card print-section-communication">
               <h3>やり取り履歴・メール記録</h3>
               {hasAnyCommunication ? (
                 <div className="crm-timeline">
@@ -1519,7 +1519,7 @@ function App() {
               )}
             </section>
 
-            <section className="crm-section-card">
+            <section className="crm-section-card print-section-add-history">
               <h3>対応履歴を追加</h3>
               <p className="empty-note">学生からの連絡、こちらから送ったメール、電話、書類確認などをここに残せます。</p>
               <div className="communication-form-grid">
@@ -1603,7 +1603,7 @@ function App() {
               </button>
             </section>
 
-            <section className="crm-section-card">
+            <section className="crm-section-card print-section-edit-history">
               <h3>記録・修正</h3>
               <div className="crm-form-grid">
                 <label>
@@ -1651,7 +1651,7 @@ function App() {
           </div>
 
           <aside className="crm-side">
-            <section className="crm-section-card crm-next-action-card">
+            <section className="crm-section-card crm-next-action-card print-section-next-action">
               <h3>次にやること</h3>
               <p className="crm-suggestion">{createNextActionSuggestion(applicant)}</p>
               <button type="button" onClick={applySuggestedNextAction}>
@@ -1664,7 +1664,7 @@ function App() {
               />
             </section>
 
-            <section className="crm-section-card">
+            <section className="crm-section-card print-section-memo">
               <h3>メモ・特徴</h3>
               <label>
                 メモ
@@ -1684,7 +1684,7 @@ function App() {
               </label>
             </section>
 
-            <section className="crm-section-card">
+            <section className="crm-section-card print-section-staff">
               <h3>担当・対応日</h3>
               <label>
                 担当者
@@ -1730,7 +1730,7 @@ function App() {
             </section>
 
             {!isCompleted(applicant) && (
-              <section className="crm-section-card">
+              <section className="crm-section-card print-section-reminder">
                 <h3>リマインド文面</h3>
                 <p>
                   未提出：

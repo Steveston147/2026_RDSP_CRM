@@ -1056,3 +1056,533 @@ td button {
     background: #fff !important;
   }
 }
+/* Compact CRM personal page layout - added for shorter vertical scroll */
+.crm-page {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.crm-topbar {
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.crm-topbar button,
+.crm-section-card button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.crm-hero {
+  padding: 10px 12px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(31, 35, 40, 0.06);
+}
+
+.crm-hero h2 {
+  margin: 2px 0 3px;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.crm-kicker {
+  font-size: 11px;
+}
+
+.crm-email {
+  font-size: 13px;
+}
+
+.crm-hero-badges {
+  gap: 5px;
+}
+
+.crm-meta-grid {
+  grid-template-columns: repeat(9, minmax(105px, 1fr));
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+
+.crm-meta-grid > div {
+  padding: 7px 8px;
+  border-radius: 9px;
+}
+
+.crm-meta-grid span {
+  margin-bottom: 2px;
+  font-size: 10px;
+}
+
+.crm-meta-grid strong {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.crm-layout {
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 10px;
+}
+
+.crm-main,
+.crm-side {
+  gap: 9px;
+}
+
+.crm-section-card {
+  padding: 9px 10px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(31, 35, 40, 0.03);
+}
+
+.crm-section-card h3 {
+  margin: 0 0 8px;
+  padding-bottom: 5px;
+  font-size: 15px;
+}
+
+.crm-section-card h4 {
+  font-size: 13px;
+}
+
+.crm-section-card label {
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.crm-section-card input[type='text'],
+.crm-section-card input[type='date'],
+.crm-section-card input[type='url'],
+.crm-section-card input[type='number'],
+.crm-section-card textarea,
+.communication-form-grid select {
+  margin-top: 3px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.crm-section-card textarea {
+  min-height: 48px;
+}
+
+.crm-status-board {
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 6px;
+}
+
+.crm-check-card {
+  grid-template-columns: 16px 1fr auto !important;
+  gap: 5px !important;
+  min-height: 34px;
+  padding: 5px 7px !important;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.crm-check-card strong {
+  font-size: 11px;
+}
+
+.visa-status-row {
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.visa-status-pill,
+.deadline-badge,
+.crm-completion-pill {
+  min-width: auto;
+  padding: 3px 7px;
+  font-size: 11px;
+}
+
+.dietary-detail-grid {
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dietary-detail-card {
+  padding: 8px;
+  border-radius: 9px;
+}
+
+.dietary-detail-card h4 {
+  margin-bottom: 7px;
+}
+
+.checkbox-group {
+  grid-template-columns: repeat(3, minmax(110px, 1fr));
+  gap: 5px;
+  margin: 7px 0;
+}
+
+.inline-check {
+  gap: 5px !important;
+  padding: 5px 7px !important;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.inline-check input,
+.crm-check-card input {
+  width: 13px;
+  height: 13px;
+}
+
+.empty-note {
+  margin: 4px 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.crm-timeline {
+  gap: 6px;
+}
+
+.crm-timeline-item {
+  padding: 7px 8px;
+  border-left-width: 4px;
+  border-radius: 8px;
+}
+
+.crm-timeline-item span {
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+.crm-timeline-item pre {
+  max-height: 130px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.communication-form-grid {
+  grid-template-columns: 100px 130px 130px 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.communication-form-grid label:nth-of-type(4) {
+  grid-column: auto;
+}
+
+.communication-form-grid label:nth-of-type(5),
+.communication-form-grid label:nth-of-type(6),
+.communication-form-grid label:nth-of-type(7) {
+  grid-column: 1 / -1;
+}
+
+.communication-check {
+  padding: 6px 8px !important;
+}
+
+.primary-action {
+  margin-top: 8px;
+}
+
+.crm-form-grid {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.crm-next-action-card textarea,
+.print-section-memo textarea,
+.print-section-staff input {
+  min-height: 44px;
+}
+
+.reminder-textarea {
+  min-height: 150px;
+}
+
+@media (max-width: 1400px) {
+  .crm-meta-grid {
+    grid-template-columns: repeat(5, minmax(105px, 1fr));
+  }
+
+  .crm-status-board {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+  .checkbox-group {
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  }
+}
+
+/* A4 portrait print layout for one-page applicant confirmation */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 6mm;
+  }
+
+  html,
+  body {
+    width: 210mm;
+    min-height: 297mm;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 8.5px !important;
+    line-height: 1.18 !important;
+  }
+
+  .container {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  h1 {
+    margin: 0 0 3mm !important;
+    font-size: 12px !important;
+    line-height: 1.1 !important;
+  }
+
+  .controls,
+  .import-message,
+  .urgent-panel,
+  .pending-reminders,
+  .dietary-summary-panel,
+  .crm-topbar {
+    display: none !important;
+  }
+
+  body[data-print-mode='list'] .summary-cards,
+  body[data-print-mode='list'] main > p {
+    display: none !important;
+  }
+
+  body[data-print-mode='list'] .crm-page {
+    display: none !important;
+  }
+
+  body[data-print-mode='list'] table {
+    display: table !important;
+    width: 100% !important;
+    font-size: 7.2px !important;
+    white-space: normal !important;
+  }
+
+  body[data-print-mode='list'] th,
+  body[data-print-mode='list'] td {
+    padding: 2px !important;
+    line-height: 1.15 !important;
+  }
+
+  body[data-print-mode='list'] th:nth-child(4),
+  body[data-print-mode='list'] td:nth-child(4),
+  body[data-print-mode='list'] th:nth-child(14),
+  body[data-print-mode='list'] td:nth-child(14),
+  body[data-print-mode='list'] th:nth-child(15),
+  body[data-print-mode='list'] td:nth-child(15),
+  body[data-print-mode='list'] th:last-child,
+  body[data-print-mode='list'] td:last-child {
+    display: none !important;
+  }
+
+  body[data-print-mode='applicant'] .summary-cards,
+  body[data-print-mode='applicant'] main > p,
+  body[data-print-mode='applicant'] table,
+  body[data-print-mode='applicant'] .dietary-summary-panel,
+  body[data-print-mode='applicant'] .urgent-panel,
+  body[data-print-mode='applicant'] .pending-reminders {
+    display: none !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-page {
+    display: block !important;
+    margin: 0 !important;
+    font-size: 8.5px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-hero {
+    display: flex !important;
+    padding: 4px 6px !important;
+    border: 1px solid #999 !important;
+    border-radius: 5px !important;
+    box-shadow: none !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-hero h2 {
+    margin: 1px 0 !important;
+    font-size: 15px !important;
+    line-height: 1.05 !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-kicker,
+  body[data-print-mode='applicant'] .crm-email {
+    font-size: 8px !important;
+    line-height: 1.1 !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-hero-badges {
+    gap: 3px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-meta-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 2px !important;
+    margin: 3px 0 !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-meta-grid > div {
+    padding: 2px 4px !important;
+    border: 1px solid #bbb !important;
+    border-radius: 3px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-meta-grid span {
+    margin-bottom: 1px !important;
+    font-size: 7px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-meta-grid strong {
+    font-size: 8.2px !important;
+    line-height: 1.15 !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-layout {
+    display: grid !important;
+    grid-template-columns: 1.45fr 0.78fr !important;
+    gap: 4px !important;
+    align-items: start !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-main,
+  body[data-print-mode='applicant'] .crm-side {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-section-card {
+    margin: 0 0 3px !important;
+    padding: 4px !important;
+    border: 1px solid #aaa !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-section-card h3 {
+    margin: 0 0 3px !important;
+    padding-bottom: 2px !important;
+    border-bottom: 1px solid #ccc !important;
+    font-size: 9.8px !important;
+    line-height: 1.05 !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-section-card h4 {
+    margin: 0 0 2px !important;
+    font-size: 8.8px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-status-board {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 2px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-check-card {
+    grid-template-columns: 11px 1fr auto !important;
+    min-height: 18px !important;
+    padding: 2px 3px !important;
+    gap: 2px !important;
+    border-radius: 3px !important;
+    font-size: 8px !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-check-card strong {
+    font-size: 7.2px !important;
+  }
+
+  body[data-print-mode='applicant'] input[type='checkbox'] {
+    width: 9px !important;
+    height: 9px !important;
+    margin: 0 !important;
+  }
+
+  body[data-print-mode='applicant'] .visa-status-row {
+    gap: 3px !important;
+    margin-top: 3px !important;
+  }
+
+  body[data-print-mode='applicant'] .visa-status-row button,
+  body[data-print-mode='applicant'] .crm-section-card button,
+  body[data-print-mode='applicant'] .primary-action,
+  body[data-print-mode='applicant'] .reminder-actions button {
+    display: none !important;
+  }
+
+  body[data-print-mode='applicant'] .visa-status-pill,
+  body[data-print-mode='applicant'] .deadline-badge,
+  body[data-print-mode='applicant'] .crm-completion-pill {
+    padding: 1px 4px !important;
+    border-radius: 999px !important;
+    font-size: 7.2px !important;
+  }
+
+  body[data-print-mode='applicant'] .dietary-detail-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 3px !important;
+    margin-top: 3px !important;
+  }
+
+  body[data-print-mode='applicant'] .dietary-detail-card {
+    padding: 3px !important;
+    border-radius: 3px !important;
+  }
+
+  body[data-print-mode='applicant'] .checkbox-group {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1px !important;
+    margin: 2px 0 !important;
+  }
+
+  body[data-print-mode='applicant'] .inline-check {
+    gap: 2px !important;
+    padding: 1px 2px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    font-size: 7.6px !important;
+  }
+
+  body[data-print-mode='applicant'] .empty-note {
+    display: none !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-suggestion {
+    margin: 0 0 2px !important;
+    padding: 3px !important;
+    border-radius: 3px !important;
+    font-size: 8px !important;
+    line-height: 1.18 !important;
+  }
+
+  body[data-print-mode='applicant'] textarea,
+  body[data-print-mode='applicant'] input,
+  body[data-print-mode='applicant'] select {
+    min-height: 16px !important;
+    height: auto !important;
+    padding: 1px 2px !important;
+    border: 1px solid #ddd !important;
+    background: #fff !important;
+    font-size: 7.5px !important;
+    line-height: 1.15 !important;
+  }
+
+  body[data-print-mode='applicant'] textarea {
+    max-height: 28px !important;
+    overflow: hidden !important;
+  }
+
+  body[data-print-mode='applicant'] .crm-next-action-card textarea,
+  body[data-print-mode='applicant'] .print-section-memo textarea {
+    max-height: 36px !important;
+  }
+
+  body[data-print-mode='applicant'] .print-section-communication,
+  body[data-print-mode='applicant'] .print-section-add-history,
+  body[data-print-mode='applicant'] .print-section-edit-history,
+  body[data-print-mode='applicant'] .print-section-reminder {
+    display: none !important;
+  }
+}
