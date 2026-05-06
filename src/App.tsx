@@ -13,6 +13,16 @@ type Applicant = {
   oneDriveLink: string;
 };
 
+type StatusFilter = 'all' | 'pending' | 'passportMissing' | 'enrollmentMissing' | 'completed';
+
+const statusFilterOptions: { value: StatusFilter; label: string }[] = [
+  { value: 'all', label: '全員' },
+  { value: 'pending', label: '未完了のみ' },
+  { value: 'passportMissing', label: 'パスポートコピー未提出' },
+  { value: 'enrollmentMissing', label: '在籍証明書未提出' },
+  { value: 'completed', label: '完了のみ' }
+];
+
 const getCell = (row: Record<string, unknown>, keys: string[]) => {
   for (const key of keys) {
     const value = row[key];
@@ -75,11 +85,39 @@ const makeId = (row: Record<string, unknown>, index: number) =>
 function App() {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [dueDate, setDueDate] = useState('');
+  const [searchText, setSearchText] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const pendingCount = useMemo(
     () => applicants.filter((a) => !a.passportSubmitted || !a.enrollmentSubmitted).length,
     [applicants]
   );
+
+  const filteredApplicants = useMemo(() => {
+    const normalizedSearch = searchText.trim().toLowerCase();
+
+    return applicants.filter((a) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        a.name.toLowerCase().includes(normalizedSearch) ||
+        a.email.toLowerCase().includes(normalizedSearch);
+
+      if (!matchesSearch) return false;
+
+      switch (statusFilter) {
+        case 'pending':
+          return !a.passportSubmitted || !a.enrollmentSubmitted;
+        case 'passportMissing':
+          return !a.passportSubmitted;
+        case 'enrollmentMissing':
+          return !a.enrollmentSubmitted;
+        case 'completed':
+          return a.passportSubmitted && a.enrollmentSubmitted;
+        default:
+          return true;
+      }
+    });
+  }, [applicants, searchText, statusFilter]);
 
   const onFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -149,6 +187,27 @@ function App() {
         </label>
 
         <label>
+          検索:
+          <input
+            type="search"
+            placeholder="氏名またはメール"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+        </label>
+
+        <label>
+          ステータス:
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}>
+            {statusFilterOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
           共通提出期限:
           <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </label>
@@ -161,7 +220,8 @@ function App() {
         </button>
       </section>
 
-      <p>未完了: {pendingCount} 名 / 全体: {applicants.length} 名</p>
+      <p>未完了：{pendingCount}名 / 全体：{applicants.length}名</p>
+      <p>表示中：{filteredApplicants.length}名</p>
 
       <table>
         <thead>
@@ -177,7 +237,7 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {applicants.map((a) => (
+          {filteredApplicants.map((a) => (
             <tr key={a.id}>
               <td>{a.name}</td>
               <td>{a.email}</td>
@@ -214,6 +274,11 @@ function App() {
               </td>
             </tr>
           ))}
+          {!filteredApplicants.length && (
+            <tr>
+              <td colSpan={8}>該当する応募者はいません。</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </main>
