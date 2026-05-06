@@ -2573,3 +2573,12 @@ td button:not(.applicant-name-button) {
     grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
   }
 }
+
+/* Applicant page as a separate view */
+.applicant-page-only {
+  padding-top: 18px;
+}
+
+.applicant-page-only .crm-page {
+  margin-top: 0;
+}
