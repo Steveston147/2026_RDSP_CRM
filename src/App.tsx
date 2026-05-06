@@ -1121,9 +1121,7 @@ function App() {
     setIsApplicantPageOpen(true);
 
     if (typeof window !== 'undefined') {
-      window.requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -1854,14 +1852,6 @@ function App() {
       </section>
     );
   };
-
-  if (isApplicantPageOpen && selectedApplicant) {
-    return (
-      <main className="container applicant-page-only">
-        {renderApplicantCrmPage(selectedApplicant)}
-      </main>
-    );
-  }
 
   return (
     <main className="container">
